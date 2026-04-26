@@ -1,0 +1,94 @@
+{
+  "saved_at": "2026-04-26T18:58:45.304512",
+  "date": "2026-04-26",
+  "positions": [
+    {
+      "ticker": "005930.KS",
+      "name": "삼성전자005930.KS · 한국⚡단타",
+      "section": "candidate",
+      "card_type": "candidate",
+      "allocation": "단타 검토",
+      "recommended_at": 219500.0,
+      "target_1": 222000.0,
+      "target_2": 225000.0,
+      "stop_loss": 216000.0
+    },
+    {
+      "ticker": "SMCI",
+      "name": "슈퍼마이크로컴퓨터SMCI · 미국⚡단타",
+      "section": "candidate",
+      "card_type": "candidate",
+      "allocation": "단타 검토",
+      "recommended_at": 29.07,
+      "target_1": 31.0,
+      "target_2": 33.0,
+      "stop_loss": 27.5
+    },
+    {
+      "ticker": "005930.KS",
+      "name": "삼성전자005930.KS · 한국",
+      "section": "candidate",
+      "card_type": "candidate",
+      "allocation": "매수 검토 ⭐",
+      "recommended_at": 219500.0,
+      "target_1": 237000.0,
+      "target_2": 263000.0,
+      "stop_loss": 200000.0
+    },
+    {
+      "ticker": "AAPL",
+      "name": "AppleAAPL · 미국",
+      "section": "candidate",
+      "card_type": "candidate",
+      "allocation": "매수 검토",
+      "recommended_at": 271.06,
+      "target_1": 292.0,
+      "target_2": 315.0,
+      "stop_loss": 252.0
+    },
+    {
+      "ticker": "373220.KS",
+      "name": "LG에너지솔루션373220.KS · 한국",
+      "section": "candidate",
+      "card_type": "candidate",
+      "allocation": "매수 검토 (소량)",
+      "recommended_at": 481000.0,
+      "target_1": 519000.0,
+      "target_2": 560000.0,
+      "stop_loss": 445000.0
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIANVDA · 미국",
+      "section": "watch",
+      "card_type": "watch",
+      "allocation": "⚠️ 관망",
+      "recommended_at": 208.19,
+      "target_1": 225.0,
+      "target_2": 240.0,
+      "stop_loss": 193.0
+    },
+    {
+      "ticker": "000660.KS",
+      "name": "SK하이닉스000660.KS · 한국",
+      "section": "watch",
+      "card_type": "watch",
+      "allocation": "⚠️ 관망",
+      "recommended_at": 1222000.0,
+      "target_1": 1320000.0,
+      "target_2": 1450000.0,
+      "stop_loss": 1130000.0
+    },
+    {
+      "ticker": "005930.KS",
+      "name": "삼성전자005930.KS · 한국",
+      "section": "simulation",
+      "card_type": "candidate",
+      "allocation": "25% · 750,000원",
+      "recommended_at": 219500.0,
+      "target_1": 237000.0,
+      "target_2": 263000.0,
+      "stop_loss": 200000.0
+    }
+  ]
+}
