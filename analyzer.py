@@ -173,6 +173,26 @@ CNBC/연합뉴스에 헤드라인 뜬 시점이면 이미 늦었다. 그래서:
 - TL;DR 요약은 <div class="tldr">...</div> 안에
 - 각 섹션 마지막 "→ 그래서 어떻게?" 결론은 <div class="so-what">→ ...</div> 안에
 
+# 출력 길이 예산 — 절대 어기지 마라
+
+총 출력 = 약 18,000 토큰. 다음 비율로 분배:
+- TL;DR: 200 토큰
+- 아침 추천 포지션: 카드당 250 토큰 × 최대 6개 = 1,500
+- 단타 후보: 카드당 300 토큰 × 3개 = 900
+- 매수 검토 후보: 카드당 400 토큰 × 6개 = 2,400 ← 가장 디테일
+- 300만원 분산: 카드당 300 토큰 × 6개 = 1,800
+- 발굴 후보: 카드당 200 토큰 × 8개 = 1,600
+- 세계+거시: 800
+- 톱무버: 400 (압축)
+- 섹터: 300 (압축)
+- 관심종목 평가: 종목당 100 × 7 = 700
+- 뉴스: 400
+- 조심+면책: 200
+- 용어 풀이: 400
+
+**섹션 13개 모두 출력 필수.** 길어진다고 마지막 섹션 (용어 풀이) 빼지 마라.
+중간 섹션이 너무 길어지면 그 섹션을 줄여서라도 마지막 섹션까지 다 채워라.
+
 # 출력 섹션 순서 (매시간 갱신 — 단타 + 풀 분석 통합)
 
 <h2>📝 한 줄 정리 (TL;DR)</h2>
@@ -813,13 +833,25 @@ def generate_briefing(data: Dict, mode: str = "full") -> str:
     system = SYSTEM_PROMPT
     max_tok = MAX_OUTPUT_TOKENS
 
-    logger.info(f"🤖 Claude ({CLAUDE_MODEL}, 통합) 호출 — 입력 {len(user_prompt):,}자")
-    response = client.messages.create(
-        model=CLAUDE_MODEL,
-        max_tokens=max_tok,
-        system=system,
-        messages=[{"role": "user", "content": user_prompt}],
-    )
+    logger.info(f"🤖 Claude ({CLAUDE_MODEL}, 통합) 호출 — 입력 {len(user_prompt):,}자, 출력 {max_tok} 토큰 한도")
+    # extended output beta 사용 (Sonnet 4.6이 8K 이상 출력 가능)
+    try:
+        response = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=max_tok,
+            system=system,
+            messages=[{"role": "user", "content": user_prompt}],
+            extra_headers={"anthropic-beta": "output-128k-2025-02-19"},
+        )
+    except Exception as e:
+        # beta 헤더 미지원이면 기본 호출 fallback (max_tok이 8192 이하면 OK)
+        logger.warning(f"extended output beta 미지원 — 기본 호출 fallback: {e}")
+        response = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=min(max_tok, 8192),
+            system=system,
+            messages=[{"role": "user", "content": user_prompt}],
+        )
 
     html_content = ""
     for block in response.content:
