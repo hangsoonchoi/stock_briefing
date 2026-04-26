@@ -34,12 +34,13 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   body {{
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
                  "맑은 고딕", "Malgun Gothic", sans-serif;
-    line-height: 1.6;
+    line-height: 1.65;
     color: #2c3e50;
-    max-width: 760px;
+    max-width: 960px;
     margin: 0 auto;
     padding: 16px;
     background: #fafafa;
+    font-size: 16px;
   }}
   .nav {{
     background: white;
@@ -56,7 +57,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     color: #2980b9;
     text-decoration: none;
     font-size: 14px;
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 6px;
     background: #ecf0f1;
   }}
@@ -67,33 +68,133 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     padding: 24px;
     border-radius: 12px 12px 0 0;
   }}
-  .header h1 {{ margin: 0 0 8px 0; font-size: 22px; }}
+  .header h1 {{ margin: 0 0 8px 0; font-size: 24px; }}
   .header .date {{ opacity: 0.85; font-size: 14px; }}
   .content {{
     background: white;
-    padding: 24px 28px;
+    padding: 28px 32px;
     border-radius: 0 0 12px 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }}
   .content h2 {{
     border-bottom: 2px solid #ecf0f1;
-    padding-bottom: 8px;
-    margin-top: 28px;
-    font-size: 18px;
+    padding-bottom: 10px;
+    margin-top: 32px;
+    font-size: 20px;
+    color: #1a2332;
   }}
   .content h2:first-child {{ margin-top: 0; }}
+  .content h3 {{ font-size: 17px; margin-top: 20px; }}
+  .content p, .content li {{ font-size: 15px; }}
+
+  /* 표 — 한글 자연 줄바꿈, 헤더 진한색 */
   .content table {{
     width: 100%;
     border-collapse: collapse;
-    margin: 12px 0;
+    margin: 14px 0;
     font-size: 14px;
+    table-layout: auto;
   }}
   .content th, .content td {{
-    padding: 8px 12px;
+    padding: 10px 14px;
     border-bottom: 1px solid #ecf0f1;
     text-align: left;
+    vertical-align: top;
+    word-break: keep-all;
+    white-space: normal;
+    line-height: 1.5;
   }}
-  .content th {{ background: #f8f9fa; font-weight: 600; }}
+  .content th {{
+    background: #2c3e50;
+    color: #ffffff;
+    font-weight: 700;
+    border-bottom: 2px solid #c0392b;
+  }}
+
+  /* 종목 카드 (매수 검토 후보, 300만원 시뮬레이션 등) */
+  .stock-card {{
+    border: 1px solid #e0e6ed;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 14px 0;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }}
+  .stock-card.candidate {{ border-left: 4px solid #c0392b; }}
+  .stock-card.watch {{ border-left: 4px solid #f39c12; background: #fff9ec; }}
+  .stock-card.discovery {{ border-left: 4px solid #27ae60; background: #f3faf5; }}
+  .stock-card.warning {{ border-left: 4px solid #e74c3c; background: #fff5f5; }}
+
+  .stock-header {{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px dashed #e0e6ed;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }}
+  .stock-header h3, .stock-header .stock-name {{
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a2332;
+  }}
+  .stock-header .stock-allocation {{
+    font-size: 14px;
+    color: #c0392b;
+    font-weight: 700;
+  }}
+
+  .stock-prices {{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 16px;
+    margin: 10px 0;
+    font-size: 14px;
+  }}
+  .stock-prices .label {{
+    color: #7f8c8d;
+    margin-right: 6px;
+    font-weight: 600;
+  }}
+  .stock-prices .value {{ color: #2c3e50; }}
+  .stock-prices .value.up {{ color: #c0392b; font-weight: 700; }}
+  .stock-prices .value.down {{ color: #2980b9; font-weight: 700; }}
+
+  .stock-reason {{
+    font-size: 14px;
+    color: #555;
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 10px;
+    line-height: 1.6;
+  }}
+
+  /* TL;DR 박스 */
+  .tldr {{
+    background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
+    border-left: 4px solid #f39c12;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    font-size: 15px;
+    line-height: 1.7;
+  }}
+
+  /* 그래서? 박스 */
+  .so-what {{
+    background: #e8f4f8;
+    border-left: 4px solid #2980b9;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 6px;
+    font-weight: 600;
+    color: #1a4f6b;
+  }}
+
   .footer {{
     text-align: center;
     color: #95a5a6;
@@ -103,25 +204,92 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   }}
   .up {{ color: #c0392b; font-weight: 600; }}
   .down {{ color: #2980b9; font-weight: 600; }}
+  strong {{ color: #c0392b; }}
+  ul, ol {{ padding-left: 1.4em; }}
+  li {{ margin-bottom: 6px; }}
+
   ul.archive-list {{ list-style: none; padding: 0; }}
   ul.archive-list li {{
     padding: 10px 12px;
     border-bottom: 1px solid #ecf0f1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }}
-  ul.archive-list li:hover {{ background: #f8f9fa; }}
   ul.archive-list a {{
     color: #2980b9;
     text-decoration: none;
     font-weight: 500;
   }}
-  @media (max-width: 600px) {{
-    body {{ padding: 8px; }}
-    .header {{ padding: 16px; border-radius: 10px 10px 0 0; }}
-    .content {{ padding: 16px; }}
+
+  /* 모바일 */
+  @media (max-width: 720px) {{
+    body {{ padding: 8px; font-size: 15px; }}
+    .header {{ padding: 18px; border-radius: 10px 10px 0 0; }}
+    .header h1 {{ font-size: 20px; }}
+    .content {{ padding: 16px 18px; }}
+    .content h2 {{ font-size: 18px; }}
+    .content table {{ font-size: 13px; }}
+    .content th, .content td {{ padding: 8px 10px; }}
+    .stock-card {{ padding: 14px; }}
+    .stock-header {{ flex-direction: column; align-items: flex-start; gap: 4px; }}
+    .stock-header h3, .stock-header .stock-name {{ font-size: 16px; }}
+    .stock-prices {{ grid-template-columns: 1fr; gap: 6px; }}
+    .tldr {{ font-size: 14px; padding: 14px 16px; }}
   }}
+
+  /* 표 줄 줄무늬 (가독성) */
+  .content table tr:nth-child(even) td {{ background: #fafbfc; }}
+
+  /* 실시간 가격 행 */
+  .live-price-row {{
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr auto 1fr;
+    gap: 6px 10px;
+    align-items: center;
+    background: #f0f4f8;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin: 8px 0 12px;
+    font-size: 14px;
+  }}
+  .live-price-row .label {{ color: #7f8c8d; font-weight: 600; }}
+  .live-price-row .rec-price {{ color: #2c3e50; font-weight: 700; }}
+  .live-price-row .current-price {{
+    color: #1a2332;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }}
+  .live-price-row .current-price.loading {{ color: #95a5a6; }}
+  .live-price-row .price-diff {{
+    color: #7f8c8d;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }}
+  .live-price-row .price-diff.up {{ color: #c0392b; }}
+  .live-price-row .price-diff.down {{ color: #2980b9; }}
+
+  @media (max-width: 720px) {{
+    .live-price-row {{
+      grid-template-columns: auto 1fr;
+      font-size: 13px;
+    }}
+  }}
+
+  .last-refreshed {{
+    font-size: 12px;
+    color: #95a5a6;
+    text-align: right;
+    margin: 4px 4px 16px;
+  }}
+  .refresh-btn {{
+    background: #2c3e50;
+    color: #fff;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 8px;
+  }}
+  .refresh-btn:hover {{ background: #1a2332; }}
 </style>
 </head>
 <body>
@@ -134,12 +302,91 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     <div class="date">{date_str}</div>
   </div>
   <div class="content">
+    <div class="last-refreshed">
+      📡 실시간 가격 갱신: <span class="last-refreshed-time">로딩 중...</span>
+      <button class="refresh-btn" onclick="manualRefresh()">🔄 새로고침</button>
+    </div>
     {body}
   </div>
   <div class="footer">
     이 리포트는 자동 생성된 정보 정리이며 투자 자문이 아닙니다.<br>
     모든 투자 판단과 결과의 책임은 본인에게 있습니다.
   </div>
+
+<script>
+// 실시간 가격 갱신 (Yahoo Finance public API)
+// 페이지에 [data-ticker="..."] [data-recommended-at="..."] 속성을 가진 카드의
+// 현재가, 추천 시점 대비 변동률을 매분 갱신.
+
+async function fetchPrice(ticker) {{
+  const yahoo = `https://query1.finance.yahoo.com/v8/finance/chart/${{ticker}}?interval=1m&range=1d`;
+  const proxy = 'https://corsproxy.io/?' + encodeURIComponent(yahoo);
+  try {{
+    const r = await fetch(proxy, {{ cache: 'no-store' }});
+    if (!r.ok) throw new Error('http ' + r.status);
+    const d = await r.json();
+    const meta = d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta;
+    if (!meta || meta.regularMarketPrice == null) return null;
+    return {{
+      price: meta.regularMarketPrice,
+      previousClose: meta.previousClose,
+      currency: meta.currency || '',
+    }};
+  }} catch (e) {{
+    console.warn('price fetch fail', ticker, e);
+    return null;
+  }}
+}}
+
+function fmtNum(n, cur) {{
+  if (n == null || isNaN(n)) return '—';
+  if (cur === 'USD') return '$' + Number(n).toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }});
+  return Number(n).toLocaleString('ko-KR', {{ maximumFractionDigits: 2 }}) + '원';
+}}
+
+async function refreshAll() {{
+  const cards = document.querySelectorAll('[data-ticker]');
+  for (const card of cards) {{
+    const ticker = card.dataset.ticker;
+    const recAt = parseFloat(card.dataset.recommendedAt || '0');
+    const result = await fetchPrice(ticker);
+    if (!result) continue;
+
+    const cur = card.querySelector('.current-price');
+    const diff = card.querySelector('.price-diff');
+
+    if (cur) {{
+      cur.textContent = fmtNum(result.price, result.currency);
+      cur.classList.remove('loading');
+    }}
+    if (diff && recAt > 0) {{
+      const pct = ((result.price - recAt) / recAt) * 100;
+      const sign = pct >= 0 ? '+' : '';
+      diff.textContent = sign + pct.toFixed(2) + '%';
+      diff.classList.remove('up', 'down');
+      if (pct > 0.05) diff.classList.add('up');
+      else if (pct < -0.05) diff.classList.add('down');
+    }}
+    await new Promise(r => setTimeout(r, 150));
+  }}
+  const ts = new Date().toLocaleTimeString('ko-KR');
+  document.querySelectorAll('.last-refreshed-time').forEach(el => el.textContent = ts);
+}}
+
+document.addEventListener('DOMContentLoaded', () => {{
+  refreshAll();
+  setInterval(refreshAll, 60000);
+}});
+
+// 수동 새로고침 버튼
+window.manualRefresh = function() {{
+  const btn = document.querySelector('.refresh-btn');
+  if (btn) {{ btn.disabled = true; btn.textContent = '⏳ 갱신 중...'; }}
+  refreshAll().finally(() => {{
+    if (btn) {{ btn.disabled = false; btn.textContent = '🔄 새로고침'; }}
+  }});
+}};
+</script>
 </body>
 </html>
 """

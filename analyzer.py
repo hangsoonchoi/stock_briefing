@@ -111,57 +111,92 @@ CNBC/연합뉴스에 헤드라인 뜬 시점이면 이미 늦었다. 그래서:
 한국어 HTML. 인라인 CSS만 (이메일 호환). 상승 #c0392b 빨강 / 하락 #2980b9 파랑.
 표는 간결하게. 글자 크기 너무 작지 않게.
 
-# 출력 섹션 순서 (반드시 이 순서)
+# 출력 형식 — HTML
+
+레이아웃 핵심 규칙 (가독성 우선):
+
+**여러 종목이 들어가는 모든 섹션 (매수 검토, 시뮬레이션, 관망, 발굴 후보)은 절대로 표(table)를 쓰지 마라.
+반드시 카드(div.stock-card) 형식으로 출력하라.**
+
+표는 한글이 가로로 좁아지면 음절 단위로 부서져서 가독성이 망가진다. 카드 형식이 PC·모바일 모두에서 압도적으로 잘 보인다.
+
+각 종목 카드의 표준 HTML 구조 (data-ticker / data-recommended-at 속성 필수 — JS 실시간 가격 갱신용):
+
+<div class="stock-card candidate" data-ticker="005930.KS" data-recommended-at="219500">
+  <div class="stock-header">
+    <h3 class="stock-name">삼성전자 <small style="font-weight:400; color:#7f8c8d;">005930.KS · 한국</small></h3>
+    <span class="stock-allocation">25% · 750,000원</span>
+  </div>
+  <div class="live-price-row">
+    <span class="label">추천 시</span> <span class="rec-price">219,500원</span>
+    <span class="label">현재가</span> <span class="current-price loading">로딩 중...</span>
+    <span class="label">변동</span> <span class="price-diff">—</span>
+  </div>
+  <div class="stock-prices">
+    <div><span class="label">매수가</span> <span class="value">210,000~221,000원</span></div>
+    <div><span class="label">1차 익절</span> <span class="value up">237,000원 (+8%)</span></div>
+    <div><span class="label">2차 익절</span> <span class="value up">260,000원 (+18%)</span></div>
+    <div><span class="label">손절가</span> <span class="value down">200,000원 (-9%)</span></div>
+  </div>
+  <div class="stock-reason">자사주 매입 공시 2건 + 임원 공시. RSI 69 (적정 구간). 회사가 자기 주식 매입 = 내부 자신감 신호.</div>
+</div>
+
+⚠️ data-ticker와 data-recommended-at은 절대 빠뜨리지 마라. 이게 있어야 페이지에서 실시간 가격 + 추천 시점 대비 변동률이 표시된다.
+
+- data-ticker: yfinance 기준 티커 (한국=종목코드.KS 또는 .KQ, 미국=대문자 티커)
+- data-recommended-at: 데이터에서 받은 현재가(close) — 단위 없는 숫자만. 예: 219500 또는 219.50
+
+카드 종류 (CSS class):
+- `stock-card candidate` : 매수 검토 후보 (빨간 줄)
+- `stock-card watch` : 관망 (노란 줄)
+- `stock-card discovery` : 발굴 후보, 작은 회사 (초록 줄)
+- `stock-card warning` : 절대 사면 안 되는 종목 (빨간 박스)
+
+표(table) 사용 가능한 곳: 거시 지표 수치 나열, 섹터 1일/5일/20일 수익률 나열 같이 컬럼이 적은 곳만.
+이 경우도 컬럼 4개 이내로 제한.
+
+특별 박스:
+- TL;DR 요약은 <div class="tldr">...</div> 안에
+- 각 섹션 마지막 "→ 그래서 어떻게?" 결론은 <div class="so-what">→ ...</div> 안에
+
+# 출력 섹션 순서
 
 <h2>📝 오늘 한 줄 정리 (TL;DR)</h2>
-<!-- 진짜 단순하게. 어려운 단어 하나도 없이 3~4줄.
-     예: "오늘은 미국 금리가 다음달에 떨어질 가능성이 커지면서 기술주에 좋아 보이는 흐름.
-         관심종목 중에서는 NVDA가 가장 좋은 신호 (임원이 최근 매수). 작은 회사 중엔 [발굴목록의 회사 1~2개] 살펴볼만.
-         300만원이라면 70%만 분산 투자하고 30%는 현금으로 두는 걸 검토." -->
+<div class="tldr">
+3~4줄 짧게. 어려운 단어 하나도 없이.
+</div>
 
 <h2>🎯 오늘 행동 가이드</h2>
-<!-- 가장 중요. 이거만 봐도 오늘 뭘 하면 좋을지 알게.
-     - 매수 검토 후보 1~3개 (표): 종목 / 왜 / 매수 검토가 / 손절가
-     - 비중 축소 검토 (있다면)
-     - 관망 (있다면)
-     - 오늘 절대 하지 말 것 (1~2줄, 진한 글씨)
--->
+- 매수 검토 후보 → stock-card candidate × 1~3개
+- 관망 → stock-card watch × N개
+- 절대 하지 말 것 → stock-card warning 1개
 
-<h2>💰 300만원 분산 시뮬레이션</h2>
-<!-- 표: 종목/티커/비중%/금액원/진입가/손절가/이유.
-     신호 약하면 현금 비중 키움. 다 채울 필요 없음. -->
+<h2>💰 300만원 분산 시뮬레이션 (100% 투입)</h2>
+- 종목별 stock-card candidate × N개. 합계 100%.
+- 마지막에 "실제로 어떻게 사나?" 짧은 안내 (몇 주씩 살 수 있는지 계산)
 
 <h2>🔍 오늘 새로 발굴된 후보 (대중에 덜 알려진 종목)</h2>
-<!-- 가장 흥미로운 부분. 본인이 모를 작은/중형 회사 중 임원이 최근 매수한 곳.
-     한국(코스닥/코스피) + 미국(SEC Form 4 클러스터) 각각 3~6개씩.
-     표 형식: 회사명 / 시장 / 공시 횟수 / 어떤 의미인지 1줄 / DART/SEC 링크.
-     특히 같은 회사에 임원 여러 명이 동시에 매수했으면 강한 신호로 짚어라.
-     단, 이건 "확실한 매수 신호"가 아니라 "추가 조사해볼 출발점"임을 명시해라.
-     이 종목들은 yfinance에 데이터가 없을 수 있으므로, 사용자가 직접 한 번 더 확인해야 함을 알려라.
--->
+- 한국 (DART 기준) — stock-card discovery × N개
+- 미국 (SEC 기준) — stock-card discovery × N개
 
 <h2>🌐 거시 환경 (쉽게 풀어서)</h2>
-<!-- Fed금리, 금리차, CPI 등. 어려운 단어 옆에 반드시 한 줄로 풀이.
-     예: "장단기 금리차 = 단기 금리 vs 장기 금리 차이. 마이너스면 경기 안 좋아질 신호로 본다."
-     끝에 "→ 그래서?" -->
+짧은 표 가능. Fed금리, 금리차, CPI. 어려운 단어 옆에 풀이.
+끝에 <div class="so-what">→ ...</div>
 
-<h2>🏭 섹터 흐름 (돈이 어디로 가나?)</h2>
-<!-- 좋은/나쁜 섹터 각 2~3개. 표 단순하게. 끝에 "→ 그래서?" -->
+<h2>🏭 섹터 흐름</h2>
+짧은 표 OK (섹터명 / 1일% / 5일% / 20일% — 4컬럼).
+끝에 <div class="so-what">→ ...</div>
 
-<h2>📋 관심종목 + 공시 한 줄 평가</h2>
-<!-- watchlist 종목별로: 현재가 / 1일% / 핵심 라벨 / 최근 공시 한 줄.
-     너무 자세하지 말고 한 종목당 2~3줄로. -->
+<h2>📋 관심종목 한 줄 평가</h2>
+종목별로 짧게. 표보다 카드 형식 권장.
 
 <h2>📰 뉴스 한 줄</h2>
-<!-- 거시 영향 큰 거 3~5줄만. 짧게. -->
+3~5줄 짧게.
 
 <h2>⚠️ 조심할 것 / 면책</h2>
-<!-- 변동성 큰 이벤트 예고, 추격매수 경고. 면책 1줄. -->
 
 <h2>📚 어려운 용어 풀이</h2>
-<!-- 본문에 나온 어려운 단어 4~6개를 마지막에 모아서 한 줄씩 풀이.
-     예: "RSI: 주식이 너무 올랐는지/내렸는지 보는 0~100 숫자. 70 이상=과매수, 30 이하=과매도."
--->
+본문 등장한 어려운 단어 4~6개 한 줄씩.
 """
 
 

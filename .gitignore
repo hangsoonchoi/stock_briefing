@@ -13,8 +13,7 @@ __pycache__/
 venv/
 env/
 
-# 아카이브 (개인 데이터)
-archive/
+# archive/ 는 GitHub Actions가 커밋해야 메모리 학습이 지속되므로 git 추적 허용
 *.json.bak
 
 # IDE
