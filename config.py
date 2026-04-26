@@ -240,7 +240,7 @@ MEMORY_LOOKBACK_DAYS = 30
 # 빠르고 저렴: "claude-sonnet-4-6" (이게 일상용으로 베스트)
 # 매우 저렴: "claude-haiku-4-5"
 CLAUDE_MODEL = "claude-sonnet-4-6"
-MAX_OUTPUT_TOKENS = 8000  # 발굴 섹션 + 가격대 표 포함이라 더 늘림
+MAX_OUTPUT_TOKENS = 14000  # 5~7개 추천 + 디테일 이유 + 모든 섹션 위해 크게
 
 # ============================================================
 # 리포트 발송 시각 (스케줄러에서 참고용 - 한국 시간 기준 권장)

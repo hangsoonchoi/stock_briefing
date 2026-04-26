@@ -199,14 +199,34 @@ intraday top_movers + watchlist intraday 활용:
 - stock-card candidate × 1~3개 (단타용 짧은 진입가/익절가/손절가, ±1~3%)
 
 <h2>🎯 오늘 행동 가이드 (장기 매수 검토)</h2>
-- 매수 검토 후보 → stock-card candidate × 1~3개
-- 관망 → stock-card watch × N개
-- 절대 하지 말 것 → stock-card warning 1개
+
+🚨 **이 섹션 규칙 — 절대 어기지 마라**:
+
+✅ **매수 검토 후보 = 정확히 6개** (5개도 안 됨, 7개도 안 됨, 무조건 6개)
+✅ 그 중 **대형주는 최대 2개**까지만 (삼성전자·SK하이닉스·LG엔솔·AAPL·NVDA·TSLA·MSFT·GOOGL·META·AMZN 등)
+✅ **나머지 4개는 반드시 발굴 후보 / 외국인 순매수 상위 / Reddit 트렌딩 / 코스닥 임원매수 클러스터에서**
+✅ 발굴 후보 데이터에 가격 없으면 "추가 조사 필요" 라벨 붙이고 stock-card discovery 형식으로 — DART 직접 확인 권고
+✅ 6개 못 채우면 본인 추측이라도 추가해라. "오늘은 6개 다 못 찾음" 같은 변명 X.
+
+각 카드 stock-card 형식 + data-* 6개 속성 + **이유 5~8문장 디테일**:
+1. 공시·매매 신호
+2. 기술적 위치 (RSI, MA200, 52주 위치)
+3. 펀더멘털 (PER, ROE, 부채)
+4. 종목 뉴스 (노조·정치·사회 이슈 — 한국 종목은 무조건!)
+5. 거시·세계 영향
+6. 위험 요인 + 손절 발동 조건
+
+추가:
+- 관망 → stock-card watch × 3~5개
+- 절대 하지 말 것 → stock-card warning 1~2개
 
 <h2>💰 300만원 분산 시뮬레이션 (100% 투입)</h2>
-- 종목별 stock-card candidate × N개. 합계 100%.
-- 발굴 후보 1~2개 10~20% 비중 포함 필수.
-- 마지막에 "실제로 어떻게 사나?" (몇 주씩 살 수 있는지)
+
+✅ **종목 = 정확히 6개** (위 매수 검토 6개와 동일하게 가도 됨)
+✅ 발굴 후보 **3개 이상 포함, 각 5~15% 비중**
+✅ 대형주 비중 **합계 50% 이하**
+✅ 합계 정확히 100% (3,000,000원). 현금 0%.
+✅ 마지막에 "실제로 어떻게 사나?" (몇 주씩 살 수 있는지)
 
 <h2>🔍 새로 발굴된 후보 (대중에 덜 알려진 종목)</h2>
 - 한국 (DART) — stock-card discovery × N개
@@ -280,6 +300,28 @@ def _format_watchlist(watchlist: List[Dict]) -> str:
                 f"MA200 {tech['ma200']:,} / ATR {tech['atr']} ({tech['atr_pct_of_price']}%) / "
                 f"라벨: {labels_str}"
             )
+
+        # 펀더멘털 (PER/PBR/ROE/부채비율 등)
+        f = s.get("fundamentals", {}) or {}
+        if f:
+            mc = f.get("market_cap")
+            mc_str = f"{mc/1e12:.1f}조" if mc and mc >= 1e12 else (f"{mc/1e9:.1f}B" if mc else "?")
+            roe = f.get("return_on_equity")
+            roe_str = f"{roe*100:.1f}%" if roe else "?"
+            margins = f.get("profit_margins")
+            margins_str = f"{margins*100:.1f}%" if margins else "?"
+            parts.append(
+                f"- 펀더멘털: 시총 {mc_str} / PER {f.get('trailing_pe', '?')} / "
+                f"PBR {f.get('price_to_book', '?')} / ROE {roe_str} / "
+                f"부채비율 {f.get('debt_to_equity', '?')} / 영업이익률 {margins_str} / "
+                f"베타 {f.get('beta', '?')} / 매출성장률 {f.get('revenue_growth', '?')} / "
+                f"배당수익률 {f.get('dividend_yield', '?')} / 공매도비율 {f.get('short_percent_of_float', '?')}"
+            )
+
+        # 어닝 캘린더
+        if s.get("next_earnings"):
+            parts.append(f"- 📅 다음 어닝: {s['next_earnings']}")
+
         if s.get("analyst"):
             parts.append(f"- 애널리스트(raw): {json.dumps(s['analyst'], default=str, ensure_ascii=False)[:300]}")
     return "\n".join(parts)
@@ -394,6 +436,28 @@ def _format_screener(screener: Dict) -> str:
     parts.append(_fmt_flow_list("기관 순매수 상위 — 코스피", krx_flow.get("inst_kospi", [])))
     parts.append(_fmt_flow_list("기관 순매수 상위 — 코스닥", krx_flow.get("inst_kosdaq", [])))
 
+    # === KRX 공매도 잔고 ===
+    short_data = screener.get("short_balance", {})
+    if short_data and (short_data.get("kospi_high_short") or short_data.get("kosdaq_high_short")):
+        parts.append("")
+        parts.append(f"## 🩹 KRX 공매도 잔고 상위 (date={short_data.get('date', '?')})")
+        parts.append(
+            "*공매도 비율 높은 종목 = 기관이 약세 베팅 중. 위험 신호.*\n"
+            "*반대로 잔고 갑자기 줄어드는 종목 = 숏커버 = 강세 가능 신호 (다음 호출 비교).*"
+        )
+        for label, items in [
+            ("코스피 공매도 비율 상위", short_data.get("kospi_high_short", [])),
+            ("코스닥 공매도 비율 상위", short_data.get("kosdaq_high_short", [])),
+        ]:
+            parts.append(f"\n### {label}")
+            if items:
+                for it in items[:8]:
+                    r = it.get("short_ratio_pct")
+                    r_str = f"{r:.2f}%" if r else "?"
+                    parts.append(f"- {it.get('name')} ({it.get('ticker')}): 공매도 잔고 {r_str}")
+            else:
+                parts.append("- (데이터 없음)")
+
     # === Reddit 트렌딩 ===
     parts.append("")
     reddit = screener.get("reddit_trend", [])
@@ -502,38 +566,62 @@ def build_user_prompt(data: Dict) -> str:
         parts.append("\n---\n")
         parts.append(mem)
 
+    # 정확도 리포트 — 과거 추천이 실제로 수익이었는지
+    accuracy = data.get("accuracy_report")
+    if accuracy and accuracy.get("details"):
+        from accuracy_tracker import format_for_prompt
+        parts.append("\n---\n")
+        parts.append(format_for_prompt(accuracy))
+
     parts.append("""
 ---
 
 위 데이터로 시스템 프롬프트 형식대로 오늘의 브리핑을 HTML로 작성해.
 
-**명심**:
-1. 독자는 주식 초보다. 중학생도 이해할 쉬운 말로. 어려운 용어는 괄호로 풀이.
-2. **300만원 분산 시뮬레이션에는 반드시 발굴 후보(소형주) 1~2개를 10~20% 비중으로 포함**. 대형주만 추천 X.
-   "추가 조사 필요" 라벨 + DART 링크 같이.
-3. **🔍 발굴 후보 섹션은 절대 빠뜨리지 말고 반드시 출력**. 한국 DART 후보가 있으면 stock-card discovery 형식으로 모두 카드화.
-4. **🚨 한국 종목별 한국어 뉴스 (#7-2)는 절대 무시하지 마라.**
-   - 노조 파업, 정치 이슈, 사회적 사건 등이 종목 가격에 직격 영향.
-   - 예: 삼성전자 노조 파업 → 생산 차질 → 단기 부정. 분석에 반드시 반영.
-   - 각 한국 종목 분석 카드의 "이유"에 관련 뉴스 핵심 한 줄 포함.
+**🔥 명심해야 할 핵심 원칙 — 절대 빠뜨리지 마라**:
 
-4-1. **🌍 세계 거시·지정학·테마 뉴스 (#7-4) 무겁게 반영.**
-   - Fed 금리, 중국 경기, 중동 분쟁, 미국 관세, AI/EV 산업 흐름 등.
-   - 이 흐름이 어떤 섹터/종목에 유리·불리한지 명확히 인과관계 짚어라.
-   - 예: "Fed 금리 인상 가능성 → 성장주 부담 → NVDA·테슬라 보수적 접근"
-   - 예: "중국 경기 부양 발표 → 한국 화학·철강 수혜 가능 → 포스코·LG화학 주목"
-   - 예: "중동 긴장 고조 → 유가 상승 → 정유주/방산주 수혜 가능"
-   - 예: "미 관세 인상 → 한국 수출주 부담 → 현대차·기아 주의"
-   - **각 거시/지정학 흐름이 본인 watchlist + 발굴 후보의 어느 종목에 어떻게 영향 미치는지 명시.**
+1. **추천 종목 수 — 매수 검토 후보 최소 5~7개, 300만원 분산 5~7개**. 1~3개는 게으른 추천.
 
-4-2. **미국 종목별 뉴스 (#7-3) — 미국 watchlist 종목 카드의 "이유"에 반영.**
-5. 임원 매매(SEC Form 4 / DART)가 있으면 강하게 다뤄라.
-6. 거시 → 섹터 → 종목 으로 인과관계 연결.
-7. 메모리에 과거 시그널이 있으면 자주 틀린 패턴 의식해서 오늘은 더 보수적으로.
-8. "사세요/파세요" X. "매수 검토", "관망", "비중 축소 검토" 표현만.
-9. 각 섹션 끝에 <div class="so-what">→ 그래서? ...</div> 로 정리.
+2. **대기업 비중 50% 이하**. 발굴 후보(DART D002 후보, KRX 외국인 순매수 상위, Reddit 트렌딩 등)에서
+   반드시 절반 이상 끌어와라. 삼성전자/애플/NVDA만 매번 추천하면 시스템 가치 0.
 
-데이터 나열보다 해석/의미가 중요. 특히 사회 이슈(노조·정치·사건)가 종목에 미치는 영향을 짚어줘야 함.
+3. **각 카드의 "이유"는 반드시 5~8문장의 디테일**. 다음 6가지를 모두 1줄씩 포함:
+   (a) **공시·매매 신호** (임원 매수 N건, 자사주 매입 등)
+   (b) **기술적 위치** (RSI N, MA200 위/아래, 52주 위치 N%)
+   (c) **펀더멘털** (PER N, ROE N%, 부채비율, 시총)
+   (d) **종목별 뉴스 (가장 중요!)** — 노조 파업·정치·사회 이슈 명시.
+       예: "삼성전자: 현재 노조 파업 진행 중 → 생산 차질 우려 → 단기 부정 이지만,
+            자사주 매입 + 재고 정리 끝나면 반등 가능"
+   (e) **거시/세계 흐름 영향** ("Fed 금리 인상 → 성장주 부담", "중동 긴장 → 정유주 수혜")
+   (f) **위험 요인 + 손절 발동 조건**
+
+4. **'이유' 짧으면 시스템 의미 없음**. 1~2문장 카드는 절대 X. 각 카드 최소 5문장.
+
+5. **🚨 한국 종목별 한국어 뉴스 (#7-2)는 종목 카드 안에 반드시 인용**.
+   "삼성전자 노조 파업", "현대차 리콜", "LG엔솔 美 IRA 보조금" 같은 이슈가 있는데 카드에 없으면 실패.
+
+6. **공매도 잔고 (#8) — 잔고 비율 높은 종목은 위험 표시 / 잔고 줄어든 종목은 강세 후보**.
+
+7. **펀더멘털 데이터 — PER/PBR/ROE/부채비율** 들어가있으면 카드에 무조건 표시.
+   예: "PER 12 (시장 평균 18보다 저평가) + ROE 18% + 부채비율 낮음 → 펀더멘털 양호"
+
+8. **어닝 캘린더 — 다가오는 어닝 발표일 명시.**
+   "어닝 D-3 (5월 1일) → 발표 직전엔 변동성 클 수 있어 보수적 진입"
+
+9. **거시·지정학 흐름 (#7-4)** — 각 흐름이 watchlist + 발굴 후보 중 어디 영향 미치는지 명시.
+   예: "Fed 금리 인하 가능성 → 성장주 호재 → NVDA·MSFT 추가 모멘텀"
+   예: "중국 부양책 → 한국 화학·철강 수혜 → 포스코·LG화학 검토 가능"
+   예: "중동 긴장 → 유가↑ → 정유·방산주 (한화오션, S-Oil) 수혜 가능"
+
+10. **메모리 (과거 시그널)** — 자주 틀린 패턴 의식하고 오늘은 보수적으로.
+
+11. **"사세요/파세요" X**. "매수 검토", "관망", "비중 축소 검토", "추가 조사 필요" 표현만.
+
+12. **각 섹션 끝에 <div class="so-what">→ 그래서? ...</div> 로 정리**.
+
+**추천 안 한 이유도 중요.** "오늘 발굴 후보에 임원 매수 클러스터 종목 N개가 있었지만 펀더멘털이 약해서 제외" 같은 사고 흐름 보여줘.
+
+데이터 나열보다 해석/의미가 중요. 본인 시각 + 위험 평가 + 시나리오를 명시.
 """)
 
     return "\n".join(parts)

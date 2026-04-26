@@ -124,6 +124,15 @@ def main() -> int:
     data["evaluated_positions"] = evaluated
     logger.info(f"  📌 추적 중인 아침 추천 포지션 {len(evaluated)}개")
 
+    # 시스템 자기 검증 — 과거 30일 추천 정확도 (Claude가 self-correct하도록)
+    from accuracy_tracker import evaluate_past_recommendations
+    accuracy = safe_run(
+        "정확도 평가", fetch_with_cache, "accuracy_30d",
+        evaluate_past_recommendations, 21600, days=30
+    ) or {"summary": "데이터 없음", "details": []}
+    data["accuracy_report"] = accuracy
+    logger.info(f"  📊 자기검증: {accuracy.get('summary', 'N/A')}")
+
     n_ind = len(data.get("indicators", []))
     n_sec = len(data.get("sectors", []))
     n_stk = len(data.get("watchlist", []))

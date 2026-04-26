@@ -100,7 +100,7 @@ def fetch_sector_performance() -> List[Dict]:
 
 
 def fetch_watchlist_data() -> List[Dict]:
-    """관심 종목 가격/변동/거래량/기술지표/애널리스트."""
+    """관심 종목 가격/변동/거래량/기술지표/애널리스트/펀더멘털/어닝."""
     results = []
     for market, stocks in WATCHLIST.items():
         for ticker, name in stocks.items():
@@ -113,24 +113,60 @@ def fetch_watchlist_data() -> List[Dict]:
                 last, prev = hist.iloc[-1], hist.iloc[-2]
                 change_pct = (last["Close"] - prev["Close"]) / prev["Close"] * 100
 
-                # 거래량 이상 체크 (30일 평균 대비)
                 avg_vol = hist["Volume"].tail(30).mean()
                 vol_ratio = float(last["Volume"]) / avg_vol if avg_vol else 1.0
 
-                # 52주 위치 (0=신저가, 1=신고가)
                 yr_low = float(hist["Low"].tail(252).min())
                 yr_high = float(hist["High"].tail(252).max())
                 yr_position = (last["Close"] - yr_low) / (yr_high - yr_low + 1e-9)
 
-                # 기술적 지표
                 tech = technicals.analyze(hist)
 
-                # 애널리스트 (있으면)
+                # 애널리스트
                 analyst_summary = None
                 try:
                     rec = tk.recommendations
                     if rec is not None and not rec.empty:
                         analyst_summary = rec.tail(5).to_dict(orient="records")
+                except Exception:
+                    pass
+
+                # 펀더멘털 (yfinance.info)
+                fundamentals = {}
+                try:
+                    info = tk.info or {}
+                    fundamentals = {
+                        "market_cap": info.get("marketCap"),
+                        "trailing_pe": info.get("trailingPE"),  # PER
+                        "forward_pe": info.get("forwardPE"),
+                        "price_to_book": info.get("priceToBook"),  # PBR
+                        "return_on_equity": info.get("returnOnEquity"),  # ROE
+                        "debt_to_equity": info.get("debtToEquity"),
+                        "profit_margins": info.get("profitMargins"),
+                        "revenue_growth": info.get("revenueGrowth"),
+                        "earnings_growth": info.get("earningsGrowth"),
+                        "dividend_yield": info.get("dividendYield"),
+                        "beta": info.get("beta"),
+                        "short_ratio": info.get("shortRatio"),
+                        "short_percent_of_float": info.get("shortPercentOfFloat"),
+                    }
+                except Exception:
+                    pass
+
+                # 어닝 캘린더
+                earnings_date = None
+                try:
+                    cal = tk.calendar
+                    if cal is not None and not (hasattr(cal, 'empty') and cal.empty):
+                        if isinstance(cal, dict):
+                            ed = cal.get("Earnings Date")
+                            if ed and isinstance(ed, list) and len(ed) > 0:
+                                earnings_date = str(ed[0])
+                        elif hasattr(cal, 'iloc'):
+                            try:
+                                earnings_date = str(cal.iloc[0, 0])
+                            except Exception:
+                                pass
                 except Exception:
                     pass
 
@@ -147,6 +183,8 @@ def fetch_watchlist_data() -> List[Dict]:
                     "year_low": round(yr_low, 2),
                     "technicals": tech,
                     "analyst": analyst_summary,
+                    "fundamentals": fundamentals,
+                    "next_earnings": earnings_date,
                 })
             except Exception as e:
                 logger.warning(f"종목 {ticker} ({name}) 수집 실패: {e}")

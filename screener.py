@@ -303,6 +303,86 @@ def scan_krx_institutional_flow(top_n: int = 15) -> Dict:
 
 
 # =============================================================
+# 3-5. KRX 공매도 잔고 — 숏커버 후보 발굴
+# =============================================================
+# 공매도 비율이 갑자기 줄어든 종목 = 기관이 숏을 풀고 있음 = 강세 가능 신호.
+# 반대로 공매도 비율 급증 = 약세 베팅 증가 = 위험 신호.
+
+def scan_krx_short_balance(top_n: int = 10) -> Dict:
+    """KRX 공매도 잔고 데이터 — 코스피·코스닥 상위 종목."""
+    try:
+        from pykrx import stock as krx
+    except Exception:
+        return {"date": None, "kospi_high_short": [], "kosdaq_high_short": []}
+
+    try:
+        today = datetime.now().strftime("%Y%m%d")
+        last_biz = krx.get_nearest_business_day_in_a_week(today)
+    except Exception:
+        last_biz = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
+
+    result = {"date": last_biz, "kospi_high_short": [], "kosdaq_high_short": []}
+
+    def _fetch(market: str, key: str):
+        try:
+            df = krx.get_shorting_balance_by_ticker(last_biz, market=market)
+            if df is None or df.empty:
+                return
+            # 잔고비율 (시총 대비) 기준 정렬
+            ratio_col = next(
+                (c for c in df.columns if "비율" in str(c) or "ratio" in str(c).lower()),
+                None,
+            )
+            if ratio_col:
+                df = df.sort_values(ratio_col, ascending=False)
+            top = df.head(top_n).reset_index()
+            for _, row in top.iterrows():
+                ticker = str(row.get("티커") or row.get("종목코드") or row.get("Ticker") or "")
+                name = str(row.get("종목명") or row.get("Name") or "")
+                ratio = row.get(ratio_col) if ratio_col else None
+                result[key].append({
+                    "ticker": ticker,
+                    "name": name,
+                    "short_ratio_pct": float(ratio) if ratio else None,
+                })
+        except Exception as e:
+            logger.warning(f"KRX 공매도 ({market}) 실패: {e}")
+
+    _fetch("KOSPI", "kospi_high_short")
+    _fetch("KOSDAQ", "kosdaq_high_short")
+    return result
+
+
+# =============================================================
+# 3-6. KRX 단기과열·투자경고 — 위험 종목 자동 필터
+# =============================================================
+# KRX가 공식 지정한 "주의해야 할" 종목들. 단기과열은 거래량/가격 급등으로 시장이 비정상으로 본 종목.
+
+def scan_krx_warning_stocks() -> Dict:
+    """KRX 단기과열·투자경고·투자위험·관리종목 목록."""
+    try:
+        from pykrx import stock as krx
+    except Exception:
+        return {"warning_kospi": [], "warning_kosdaq": [], "managed": []}
+
+    today = datetime.now().strftime("%Y%m%d")
+    result = {"date": today, "warning_kospi": [], "warning_kosdaq": [], "managed": []}
+
+    # pykrx에 공식 단기과열·투자경고 함수 — get_shorting_status_by_date 등
+    # 정확히 매칭되는 함수가 없을 수 있으므로 try-except로 감쌈
+    try:
+        # 시도: 상장종목 외부 데이터 (관리/감리/단기과열)
+        # pykrx에는 직접 단기과열 종목 가져오는 표준 함수가 없음
+        # 대신 거래량 + 가격 급등 종목으로 proxy
+        # 실제 KRX 단기과열은 wisestock 등에서 별도 가져와야 함
+        pass
+    except Exception as e:
+        logger.warning(f"KRX 단기과열 실패: {e}")
+
+    return result
+
+
+# =============================================================
 # 4. Reddit — 트렌딩 종목 (미국 retail 관심도)
 # =============================================================
 # r/stocks, r/wallstreetbets에서 자주 언급되는 티커는
@@ -447,11 +527,25 @@ def screen_market(days: int = 7) -> Dict:
         logger.warning(f"Reddit 트렌딩 실패: {e}")
         reddit_trend = []
 
+    # 5. KRX 공매도 잔고
+    try:
+        short_data = scan_krx_short_balance(top_n=10)
+        n_short = len(short_data.get("kospi_high_short", [])) + len(short_data.get("kosdaq_high_short", []))
+        logger.info(f"  ✓ KRX 공매도 잔고 {n_short}개 종목 (date={short_data.get('date')})")
+    except Exception as e:
+        logger.warning(f"KRX 공매도 실패: {e}")
+        short_data = {"date": None, "kospi_high_short": [], "kosdaq_high_short": []}
+
+    # 6. KRX 단기과열/투자경고 (현재 placeholder)
+    warning_data = scan_krx_warning_stocks()
+
     return {
         "kr_candidates": kr_candidates,
         "us_candidates": us_candidates,
         "krx_flow": krx_flow,
         "reddit_trend": reddit_trend,
+        "short_balance": short_data,
+        "warning_stocks": warning_data,
         "scanned_days": days,
     }
 
