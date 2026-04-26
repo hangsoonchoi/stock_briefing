@@ -57,6 +57,14 @@ def extract_positions_from_html(html: str) -> List[Dict]:
         if not ticker:
             continue
 
+        # 티커 검증 — 한국=숫자.KS/.KQ, 미국=대문자만
+        import re as _re
+        is_kr = bool(_re.match(r"^\d{6}\.(KS|KQ)$", ticker))
+        is_us = bool(_re.match(r"^[A-Z]{1,5}$", ticker))
+        if not (is_kr or is_us):
+            logger.warning(f"잘못된 ticker 무시: {ticker} (회사명 또는 형식 오류)")
+            continue
+
         # 종목명 추출
         name_el = card.find(class_="stock-name") or card.find("h3")
         name = name_el.get_text(strip=True) if name_el else ticker

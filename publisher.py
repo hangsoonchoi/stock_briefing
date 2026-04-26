@@ -147,6 +147,37 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   .stock-card.discovery {{ border-left: 4px solid #27ae60; background: #f3faf5; }}
   .stock-card.warning {{ border-left: 4px solid #e74c3c; background: #fff5f5; }}
 
+  /* TOP 3 우선순위 카드 — 금/은/동 강조 */
+  .stock-card.priority-1 {{
+    border-left: 6px solid #f39c12;
+    background: linear-gradient(90deg, #fffaf0 0%, #fff 30%);
+    box-shadow: 0 2px 8px rgba(243,156,18,0.2);
+    padding: 20px 24px;
+  }}
+  .stock-card.priority-1 .stock-header h3 {{ font-size: 19px; }}
+  .stock-card.priority-1 .stock-header h3::before {{
+    content: "🥇 ";
+    margin-right: 4px;
+  }}
+  .stock-card.priority-2 {{
+    border-left: 5px solid #95a5a6;
+    background: linear-gradient(90deg, #fafbfc 0%, #fff 30%);
+    padding: 18px 22px;
+  }}
+  .stock-card.priority-2 .stock-header h3::before {{
+    content: "🥈 ";
+    margin-right: 4px;
+  }}
+  .stock-card.priority-3 {{
+    border-left: 5px solid #b87333;
+    background: linear-gradient(90deg, #fcf8f3 0%, #fff 30%);
+    padding: 18px 22px;
+  }}
+  .stock-card.priority-3 .stock-header h3::before {{
+    content: "🥉 ";
+    margin-right: 4px;
+  }}
+
   .stock-header {{
     display: flex;
     justify-content: space-between;
@@ -163,11 +194,23 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     font-weight: 700;
     color: #1a2332;
   }}
+  /* 우상단 배지 — 항상 어두운 배경 + 흰 글씨 (대비 강제) */
   .stock-header .stock-allocation {{
-    font-size: 14px;
-    color: #c0392b;
+    font-size: 13px;
+    color: #ffffff !important;
     font-weight: 700;
+    background: #2c3e50;
+    padding: 4px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
   }}
+  .stock-card.candidate .stock-header .stock-allocation {{ background: #c0392b; }}
+  .stock-card.discovery .stock-header .stock-allocation {{ background: #27ae60; }}
+  .stock-card.watch .stock-header .stock-allocation {{ background: #d68910; }}
+  .stock-card.warning .stock-header .stock-allocation {{ background: #922b21; }}
+  .stock-card.priority-1 .stock-header .stock-allocation {{ background: #d4ac0d; }}
+  .stock-card.priority-2 .stock-header .stock-allocation {{ background: #7f8c8d; }}
+  .stock-card.priority-3 .stock-header .stock-allocation {{ background: #b87333; }}
 
   .stock-prices {{
     display: grid;

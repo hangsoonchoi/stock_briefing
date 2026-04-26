@@ -45,9 +45,13 @@ def save_today(record: Dict) -> Path:
 
 def load_recent(days: int = MEMORY_LOOKBACK_DAYS) -> List[Dict]:
     """지난 N일치 archive 불러오기 (최신 → 과거 순)."""
+    import re as _re
     cutoff = datetime.now().date() - timedelta(days=days)
     out = []
     for p in sorted(ARCHIVE_DIR.glob("*.json"), reverse=True):
+        # YYYY-MM-DD 형식 파일만 처리. today_positions.json 같은 거 무시.
+        if not _re.match(r"^\d{4}-\d{2}-\d{2}$", p.stem):
+            continue
         try:
             file_date = datetime.strptime(p.stem, "%Y-%m-%d").date()
             if file_date < cutoff:
