@@ -1,10 +1,22 @@
-name: Daily Market Briefing
+name: Market Briefing
 
 on:
   schedule:
-    # UTC 22:30 = KST 다음날 07:30 (월~금 KST)
+    # 풀 모드 — KST 평일 07:30 (UTC 일~목 22:30)
     - cron: '30 22 * * 0-4'
+    # 단타 모드 — KST 평일 08:00 (UTC 일~목 23:00)
+    - cron: '0 23 * * 0-4'
+    # 단타 모드 — KST 평일 09:00~18:00 매시 (UTC 월~금 0:00~9:00)
+    - cron: '0 0-9 * * 1-5'
   workflow_dispatch:  # 수동 실행 가능
+    inputs:
+      mode:
+        description: '실행 모드'
+        type: choice
+        options:
+          - full
+          - quick
+        default: full
 
 permissions:
   contents: write
@@ -29,9 +41,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Determine BRIEF_MODE
+        id: mode
+        run: |
+          MODE="full"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MODE="${{ github.event.inputs.mode }}"
+          elif [ "${{ github.event.schedule }}" = "30 22 * * 0-4" ]; then
+            MODE="full"
+          else
+            MODE="quick"
+          fi
+          echo "BRIEF_MODE=$MODE" >> $GITHUB_ENV
+          echo "Running in $MODE mode"
+
       - name: Run briefing
         env:
           PUBLISH_MODE: web
+          BRIEF_MODE: ${{ env.BRIEF_MODE }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
           SENDER_APP_PASSWORD: ${{ secrets.SENDER_APP_PASSWORD }}

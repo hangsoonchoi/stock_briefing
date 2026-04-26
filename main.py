@@ -40,9 +40,11 @@ def main() -> int:
     logger.info(f"📊 시장 브리핑 시작 — {start.strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info("=" * 60)
 
-    # 1. 환경변수 검증
-    # PUBLISH_MODE: "web"(기본 — docs/ 폴더에 HTML 저장) / "email"(Gmail SMTP 발송) / "both"
+    # 1. 환경변수 + 모드 검증
+    # PUBLISH_MODE: "web"(기본 — docs/ 폴더에 HTML 저장) / "email" / "both"
+    # BRIEF_MODE: "full"(아침 풀 분석) / "quick"(매시간 단타 모드)
     publish_mode = os.environ.get("PUBLISH_MODE", "web").lower()
+    brief_mode = os.environ.get("BRIEF_MODE", "full").lower()
 
     required = ["ANTHROPIC_API_KEY"]
     if publish_mode in ("email", "both"):
@@ -52,38 +54,59 @@ def main() -> int:
         required_keys=required,
         optional_keys=["FRED_API_KEY", "DART_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"],
     )
-    logger.info(f"PUBLISH_MODE = {publish_mode}")
+    logger.info(f"PUBLISH_MODE = {publish_mode} | BRIEF_MODE = {brief_mode}")
 
-    # 2. 데이터 수집 (모듈별 격리)
+    # 2. 데이터 수집 (모드별 분기)
     from data_fetcher import fetch_all_data
-    from macro_fetcher import fetch_macro_indicators
-    from filings_fetcher import fetch_all_filings
-    from screener import screen_market
+    from intraday_fetcher import fetch_quick_data
 
     data = safe_run("시장 데이터", fetch_all_data) or {
         "collected_at": datetime.now().isoformat(),
         "indicators": [], "sectors": [], "watchlist": [], "news": [],
     }
-    data["macro"] = safe_run("거시 지표", fetch_macro_indicators) or []
-    data["filings"] = safe_run("공시", fetch_all_filings) or {"sec": {}, "dart": {}}
-    data["screener"] = safe_run("발굴 스캔", screen_market, days=7) or {
-        "kr_candidates": [], "us_candidates": [], "scanned_days": 7,
-    }
+
+    if brief_mode == "full":
+        # 풀 모드: 거시·공시·발굴까지 다 수집
+        from macro_fetcher import fetch_macro_indicators
+        from filings_fetcher import fetch_all_filings
+        from screener import screen_market
+
+        data["macro"] = safe_run("거시 지표", fetch_macro_indicators) or []
+        data["filings"] = safe_run("공시", fetch_all_filings) or {"sec": {}, "dart": {}}
+        data["screener"] = safe_run("발굴 스캔", screen_market, days=7) or {
+            "kr_candidates": [], "us_candidates": [], "scanned_days": 7,
+        }
+    else:
+        # 단타 모드: 빠른 데이터만 (가격/거래량/장중)
+        quick = safe_run("단타 데이터", fetch_quick_data) or {
+            "intraday_watchlist": [], "top_movers": {},
+        }
+        data["intraday"] = quick
+        # 빈 자리 채움 (analyzer가 안전하게 작동하도록)
+        data["macro"] = []
+        data["filings"] = {"sec": {}, "dart": {}}
+        data["screener"] = {"kr_candidates": [], "us_candidates": [], "scanned_days": 0}
 
     n_ind = len(data.get("indicators", []))
     n_sec = len(data.get("sectors", []))
     n_stk = len(data.get("watchlist", []))
     n_news = len(data.get("news", []))
-    n_macro = len(data.get("macro", []))
-    n_sec_filings = len(data.get("filings", {}).get("sec", {}))
-    n_dart = len(data.get("filings", {}).get("dart", {}))
-    n_kr_scan = len(data.get("screener", {}).get("kr_candidates", []))
-    n_us_scan = len(data.get("screener", {}).get("us_candidates", []))
-    logger.info(
-        f"\n수집 요약 — 지표 {n_ind} / 섹터 {n_sec} / 종목 {n_stk} / "
-        f"뉴스 {n_news} / 거시 {n_macro} / SEC {n_sec_filings} / DART {n_dart} / "
-        f"발굴(KR {n_kr_scan} / US {n_us_scan})"
-    )
+    if brief_mode == "full":
+        n_macro = len(data.get("macro", []))
+        n_dart = len(data.get("filings", {}).get("dart", {}))
+        logger.info(
+            f"\n[FULL] 수집 — 지표 {n_ind} / 섹터 {n_sec} / 종목 {n_stk} / "
+            f"뉴스 {n_news} / 거시 {n_macro} / DART {n_dart}"
+        )
+    else:
+        intra = data.get("intraday", {})
+        movers = intra.get("top_movers", {})
+        logger.info(
+            f"\n[QUICK] 수집 — 지표 {n_ind} / 종목 {n_stk} (5분봉) / "
+            f"뉴스 {n_news} / 톱무버: KR↑{len(movers.get('kr_gainers',[]))} "
+            f"KR↓{len(movers.get('kr_losers',[]))} "
+            f"US↑{len(movers.get('us_gainers',[]))} US↓{len(movers.get('us_losers',[]))}"
+        )
 
     # 데이터가 너무 빈약하면 중단
     if n_ind == 0 and n_stk == 0 and n_macro == 0:
@@ -93,7 +116,7 @@ def main() -> int:
     # 3. Claude 분석 → HTML
     try:
         from analyzer import generate_briefing
-        html_body = generate_briefing(data)
+        html_body = generate_briefing(data, mode=brief_mode)
     except Exception as e:
         logger.error(f"Claude 분석 실패: {e}")
         logger.debug(traceback.format_exc())

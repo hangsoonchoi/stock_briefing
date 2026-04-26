@@ -440,20 +440,178 @@ def build_user_prompt(data: Dict) -> str:
     return "\n".join(parts)
 
 
-def generate_briefing(data: Dict) -> str:
-    """Claude API 호출 → HTML 리포트."""
+def _format_intraday_watchlist(items: List[Dict]) -> str:
+    if not items:
+        return "(관심종목 5분봉 데이터 없음)"
+    lines = []
+    for s in items:
+        intra = s.get("intraday_pct")
+        hour = s.get("hour_pct")
+        vol_r = s.get("vol_vs_avg")
+        intra_s = f"{intra:+.2f}%" if intra is not None else "—"
+        hour_s = f"{hour:+.2f}%" if hour is not None else "—"
+        vol_s = f"{vol_r}x" if vol_r else "—"
+        lines.append(
+            f"- [{s['market']}] {s['name']} ({s['ticker']}): 현재 {s.get('last_price')} / "
+            f"오늘 시작 대비 {intra_s} / 최근 1시간 {hour_s} / 거래량 평균 대비 {vol_s} / "
+            f"오늘 고점 {s.get('high_today')} / 저점 {s.get('low_today')}"
+        )
+    return "\n".join(lines)
+
+
+def _format_top_movers(movers: Dict) -> str:
+    parts = []
+    sections = [
+        ("🇰🇷 한국 상승 Top", movers.get("kr_gainers", []), "intraday_pct"),
+        ("🇰🇷 한국 하락 Top", movers.get("kr_losers", []), "intraday_pct"),
+        ("🇰🇷 한국 거래량 폭증", movers.get("kr_volume_spike", []), "vol_vs_avg"),
+        ("🇺🇸 미국 상승 Top", movers.get("us_gainers", []), "intraday_pct"),
+        ("🇺🇸 미국 하락 Top", movers.get("us_losers", []), "intraday_pct"),
+        ("🇺🇸 미국 거래량 폭증", movers.get("us_volume_spike", []), "vol_vs_avg"),
+    ]
+    for label, items, sort_key in sections:
+        parts.append(f"\n### {label}")
+        if not items:
+            parts.append("- (없음)")
+            continue
+        for it in items[:8]:
+            tk = it.get("ticker")
+            pct = it.get("intraday_pct")
+            vol = it.get("vol_vs_avg")
+            price = it.get("last_price")
+            parts.append(
+                f"- {tk}: 현재 {price} / 장중 {pct:+.2f}% / 거래량 평균 대비 {vol}x"
+                if vol else
+                f"- {tk}: 현재 {price} / 장중 {pct:+.2f}%"
+            )
+    return "\n".join(parts)
+
+
+def build_quick_user_prompt(data: Dict) -> str:
+    """단타 모드 — 빠른 데이터만."""
+    parts = [f"# 데이터 수집 시각 (KST 기준): {data['collected_at']}\n"]
+
+    parts.append("## 1. 시장 지표 (지수/환율 등 현재값)")
+    indicators = data.get("indicators", [])
+    for ind in indicators[:8]:  # 단타 모드는 핵심만
+        arrow = "▲" if ind["change_pct"] > 0 else ("▼" if ind["change_pct"] < 0 else "—")
+        parts.append(
+            f"- {ind['name']} ({ind['ticker']}): {ind['close']:,} {arrow} {ind['change_pct']:+.2f}%"
+        )
+
+    intraday = data.get("intraday", {})
+    parts.append("\n## 2. 관심종목 — 5분봉 흐름 (지금 이 순간)")
+    parts.append(_format_intraday_watchlist(intraday.get("intraday_watchlist", [])))
+
+    parts.append("\n## 3. 🚀 오늘 톱 무버 (장중)")
+    parts.append(_format_top_movers(intraday.get("top_movers", {})))
+
+    parts.append("\n## 4. 최근 1시간 뉴스")
+    parts.append(_format_news(data.get("news", [])))
+
+    parts.append("""
+---
+
+위 데이터로 시스템 프롬프트의 단타 모드 형식대로 빠른 브리핑을 HTML로 작성해.
+
+**명심**:
+1. 단타 모드 — 짧고 빠르게. 5분 안에 읽을 수 있게.
+2. 거래량 폭증 + 상승 종목을 1순위로 강조 (가장 강한 단타 신호).
+3. 모든 카드에 data-ticker, data-recommended-at 속성 필수.
+4. 진입가/익절가/손절가는 단타 기준 (보통 ±2~3% 익절, -1.5~2.5% 손절).
+5. 추격매수 위험 종목은 분명히 경고.
+6. "사세요" X — "검토", "관망", "조심"만.
+""")
+
+    return "\n".join(parts)
+
+
+QUICK_SYSTEM_PROMPT = f"""너는 한국인 단타 트레이더(운용자금 약 {TOTAL_CAPITAL_KRW:,}원)를 위한
+시간당 갱신 단타 브리핑 작성자다.
+
+# 단타 모드 핵심 원칙
+
+이건 **장중 1시간 단위 갱신**이다. 오전 8시~오후 6시 사이에 실행됨.
+풀 분석(아침 7:30)과 다르게, **지금 이 순간** 움직이는 종목만 짧고 빠르게.
+
+**독자는 주식 완전 초보지만 단타에 관심 있다.** 친구가 카톡으로 "지금 뭐 사면 돼?" 물어본 느낌으로 답.
+
+쉬운 말 규칙:
+- "익절" X → "이익 보고 팔기" / "손절" X → "손해 줄이려고 팔기"
+- "RSI 70+" → "RSI 70 (너무 올라서 빠질 위험 신호)"
+- "거래량 폭증" → "거래량 평소보다 N배 많음 = 사람들이 갑자기 몰리는 중"
+- "장중 +5%" → "오늘 시작가 대비 +5% 상승"
+
+# 단타 신호 우선순위 (이 순서로 카드 작성)
+
+1. **거래량 폭증 + 상승** = 강한 매수세 (가장 좋은 단타 후보)
+2. **장중 +3~5% 상승 중** = 모멘텀 있음
+3. **장중 -5% 이상 급락** = 리바운드 후보 (고위험)
+4. **장중 -3% 정도 살짝 빠진 관심종목** = 매수 기회 가능
+
+# 카드 형식 — 표(table) 절대 X, stock-card 카드 사용
+
+각 단타 후보 카드에 반드시 포함:
+- data-ticker, data-recommended-at 속성 (실시간 가격 갱신용)
+- 지금 가격 / 시작가 / 장중 변동% / 거래량 평균 대비
+- 진입 검토 가격 (지금 가격 기준 ±0.5~1%)
+- 1차 익절 (보통 +2~3% — 단타는 짧게)
+- 2차 익절 (+5~7%)
+- 손절 (-1.5~2.5% — 단타는 손절 빨리)
+- 시간 안에 이유 1줄 ("거래량 5배 + RSI 65 + 5분봉 돌파")
+
+# 출력 섹션 (단타 모드)
+
+<h2>⚡ 지금 (KST 시각) — 한 줄 정리</h2>
+<div class="tldr">
+시장 분위기 한 줄 + 지금 가장 핫한 종목 1~2개 + 조심할 점 1줄.
+</div>
+
+<h2>🔥 지금 단타 후보 (Top 3~5)</h2>
+- stock-card candidate × 3~5개
+- 거래량 폭증 + 상승 종목 우선
+- 한국 + 미국 섞어서
+
+<h2>🚀 장중 톱 무버</h2>
+한국·미국 각각 상승/하락 Top 5씩. 카드 또는 짧은 표(4컬럼 이내).
+
+<h2>📈 관심종목 — 지금 흐름</h2>
+watchlist 종목별로 stock-card watch 형식. 5분봉 흐름 + 1시간 변동.
+
+<h2>📰 최근 1시간 핵심 뉴스</h2>
+3~5줄.
+
+<h2>⚠️ 조심할 것</h2>
+지금 추격매수 위험한 종목, 변동성 큰 이벤트 예고.
+
+# 짧고 빠르게
+
+풀 모드가 5,000자 정도면, 단타 모드는 **2,500자 이내로 짧게**. 오래 안 걸리게.
+"""
+
+
+def generate_briefing(data: Dict, mode: str = "full") -> str:
+    """Claude API 호출 → HTML 리포트. mode = 'full' or 'quick'."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         raise RuntimeError("ANTHROPIC_API_KEY 환경변수 없음")
 
     client = Anthropic(api_key=api_key)
-    user_prompt = build_user_prompt(data)
 
-    logger.info(f"🤖 Claude ({CLAUDE_MODEL}) 호출 — 입력 {len(user_prompt):,}자")
+    if mode == "quick":
+        user_prompt = build_quick_user_prompt(data)
+        system = QUICK_SYSTEM_PROMPT
+        max_tok = 4000  # 단타는 짧게
+    else:
+        user_prompt = build_user_prompt(data)
+        system = SYSTEM_PROMPT
+        max_tok = MAX_OUTPUT_TOKENS
+
+    logger.info(f"🤖 Claude ({CLAUDE_MODEL}, mode={mode}) 호출 — 입력 {len(user_prompt):,}자")
     response = client.messages.create(
         model=CLAUDE_MODEL,
-        max_tokens=MAX_OUTPUT_TOKENS,
-        system=SYSTEM_PROMPT,
+        max_tokens=max_tok,
+        system=system,
         messages=[{"role": "user", "content": user_prompt}],
     )
 
