@@ -87,29 +87,48 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   .content h3 {{ font-size: 17px; margin-top: 20px; }}
   .content p, .content li {{ font-size: 15px; }}
 
-  /* 표 — 한글 자연 줄바꿈, 헤더 진한색 */
+  /* 표 — 한글 자연 줄바꿈 강제 + 헤더 진한색 강제 (Claude 인라인 스타일 덮어쓰기) */
   .content table {{
-    width: 100%;
-    border-collapse: collapse;
-    margin: 14px 0;
-    font-size: 14px;
-    table-layout: auto;
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 14px 0 !important;
+    font-size: 14px !important;
   }}
+  .content table > thead,
+  .content table > tbody,
+  .content table > tfoot {{
+    display: table !important;
+    width: 100% !important;
+    min-width: 640px !important;
+    border-collapse: collapse !important;
+  }}
+  .content table tr {{ display: table-row !important; }}
   .content th, .content td {{
-    padding: 10px 14px;
-    border-bottom: 1px solid #ecf0f1;
-    text-align: left;
-    vertical-align: top;
-    word-break: keep-all;
-    white-space: normal;
-    line-height: 1.5;
+    display: table-cell !important;
+    padding: 10px 14px !important;
+    border-bottom: 1px solid #ecf0f1 !important;
+    text-align: left !important;
+    vertical-align: top !important;
+    word-break: keep-all !important;
+    word-wrap: break-word !important;
+    white-space: normal !important;
+    line-height: 1.6 !important;
+    min-width: 90px !important;
+    background: transparent !important;
+    color: #2c3e50 !important;
   }}
   .content th {{
-    background: #2c3e50;
-    color: #ffffff;
-    font-weight: 700;
-    border-bottom: 2px solid #c0392b;
+    background: #2c3e50 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    border-bottom: 2px solid #c0392b !important;
   }}
+  /* 마지막 열(이유)은 더 넓게 */
+  .content td:last-child {{ min-width: 220px !important; }}
 
   /* 종목 카드 (매수 검토 후보, 300만원 시뮬레이션 등) */
   .stock-card {{
