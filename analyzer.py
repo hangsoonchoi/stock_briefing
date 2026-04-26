@@ -118,6 +118,12 @@ CNBC/연합뉴스에 헤드라인 뜬 시점이면 이미 늦었다. 그래서:
 **여러 종목이 들어가는 모든 섹션 (매수 검토, 시뮬레이션, 관망, 발굴 후보)은 절대로 표(table)를 쓰지 마라.
 반드시 카드(div.stock-card) 형식으로 출력하라.**
 
+🚨 **인라인 스타일(style="...") 절대 금지** 🚨
+- `<span class="stock-allocation" style="background: #2980b9; color: #c0392b">...` 같은 거 절대 X
+- 색깔은 CSS 클래스로만 (.stock-allocation, .stock-card.candidate 등)
+- 인라인 스타일이 들어가면 흰 글씨가 안 적용되어 글씨가 안 보이게 됨
+- HTML 태그에는 class 속성과 data-* 속성만 쓰고, style 속성은 절대 추가하지 마라
+
 표는 한글이 가로로 좁아지면 음절 단위로 부서져서 가독성이 망가진다. 카드 형식이 PC·모바일 모두에서 압도적으로 잘 보인다.
 
 각 종목 카드의 표준 HTML 구조 (데이터 속성 6개 모두 필수 — JS 실시간 가격 + 매시간 추적용):
@@ -886,21 +892,115 @@ QUICK_SYSTEM_PROMPT = f"""너는 한국인 단타 트레이더(운용자금 약 
 """
 
 
-def generate_briefing(data: Dict, mode: str = "full") -> str:
-    """Claude API 호출 → HTML 리포트. 통합 모드 — 단타 + 풀분석 한꺼번에."""
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise RuntimeError("ANTHROPIC_API_KEY 환경변수 없음")
+SYSTEM_PROMPT_PART1 = """너는 한국 개인 투자자(300만원 운용)를 위한 시장 브리핑 첫 부분 작성자다.
 
-    client = Anthropic(api_key=api_key)
+# 가장 중요한 원칙
+- 독자는 주식 완전 초보. 14살한테 설명하듯 쉬운 말로.
+- 어려운 단어 옆에 괄호로 풀이.
+- 친구처럼 카톡하듯.
+- "사세요" 단정 X. "매수 검토", "관망", "팔기 검토" 표현만.
 
-    # 항상 통합 프롬프트 사용 (단타 + 풀분석 다 포함)
-    user_prompt = build_user_prompt(data)
-    system = SYSTEM_PROMPT
-    max_tok = MAX_OUTPUT_TOKENS
+# 카드 형식 (모든 종목 추천)
 
-    logger.info(f"🤖 Claude ({CLAUDE_MODEL}, 통합) 호출 — 입력 {len(user_prompt):,}자, 출력 {max_tok} 토큰 한도")
-    # extended output beta 사용 (Sonnet 4.6이 8K 이상 출력 가능)
+<div class="stock-card candidate" data-ticker="005930.KS" data-recommended-at="219500" data-target1="237000" data-target2="263000" data-stop="200000" data-section="...">
+  <div class="stock-header">
+    <h3 class="stock-name">종목명 <small style="font-weight:400; color:#7f8c8d;">티커 · 시장</small></h3>
+    <span class="stock-allocation">25% · 750,000원</span>
+  </div>
+  <div class="live-price-row">
+    <span class="label">추천 시</span> <span class="rec-price">219,500원</span>
+    <span class="label">현재가</span> <span class="current-price loading">로딩 중...</span>
+    <span class="label">변동</span> <span class="price-diff">—</span>
+  </div>
+  <div class="stock-prices">...</div>
+  <div class="stock-reason">5~8문장 디테일</div>
+</div>
+
+🚨 인라인 스타일(style="...")은 small 태그 빼고는 절대 X. 색상 클래스만 사용.
+
+# 이번 part1 출력 — 페이지 위쪽 4개 섹션만
+
+<h2>📝 한 줄 정리 (TL;DR)</h2>
+<div class="tldr">
+지금 시각 + 시장 분위기 + 본인 포지션 핵심 + 단타 후보. 4줄.
+</div>
+
+<h2>💸 지금 당장 팔아야 할 것 (SELL)</h2>
+evaluated_positions 중 손절 도달/임박/큰 하락만. 없으면 섹션 통째 생략.
+각 카드 stock-card warning, data-section="sell-now". 디테일 (왜 팔아야 하는지 3~4문장).
+
+<h2>🚫 오늘 절대 사지 말 것 (DO NOT BUY)</h2>
+RSI 80+ / 52주 고점 / 추격매수 함정 종목 2~3개. stock-card warning, data-section="avoid".
+각 카드 디테일 3~4문장 (왜 위험한지).
+
+<h2>🏆 오늘 살 거라면 — TOP 3 우선순위</h2>
+딱 3개 (1·2·3순위). stock-card priority-1/2/3, data-section="top-priority".
+- 🥇 1순위: 가장 강력. 4~6문장 이유.
+- 🥈 2순위: 4~6문장.
+- 🥉 3순위: 발굴 후보(소형주)에서. "추가 조사 필요" 라벨. 3~4문장.
+각 카드: 매수가, 1차 목표, 2차 목표, 손절가, 추천 비중(원), 시간 horizon, 위험.
+
+<h2>📌 아침 추천 포지션 — 지금 상태</h2>
+evaluated_positions 데이터 활용. 각 포지션마다 카드:
+- 헤더: "📌 보유" / "✅ 익절 도달" / "🚨 손절 도달" / "⚠️ 손절 임박"
+- live-price-row + stock-prices
+- 권고 명확 (즉시 매도 / 보유 유지 / 일부 매도 등)
+- 이유 2~3문장
+
+비어있으면 "오늘 풀 분석 데이터 없음" 한 줄.
+
+# 이게 전부. 다른 섹션은 part2에서 처리. **위 5개 섹션만 출력**, 다른 섹션 출력 X.
+"""
+
+SYSTEM_PROMPT_PART2 = """너는 한국 개인 투자자(300만원 운용)를 위한 시장 브리핑 두 번째 부분 작성자다.
+
+# 카드 형식 같음 (위 part1과 동일)
+
+# 이번 part2 출력 — 페이지 아래쪽 11개 섹션
+
+<h2>⚡ 지금 단타 후보 (Top 1~3)</h2>
+intraday top_movers 활용. 거래량 폭증 + 상승 우선. stock-card candidate × 1~3개. 단타용 짧은 진입가/익절가/손절가 (±1~3%).
+
+<h2>🎯 오늘 행동 가이드 (장기 매수 검토)</h2>
+정확히 6개 매수 검토 후보. 대형주 최대 2개, 발굴 후보 4개 이상. stock-card candidate × 6.
+각 카드 5~8문장 이유 (공시·기술·펀더·뉴스·거시·위험).
+관망 3~5개 (stock-card watch).
+절대 하지 말 것 1~2개 (stock-card warning).
+
+<h2>💰 300만원 분산 시뮬레이션 (100% 투입)</h2>
+정확히 6개. 합계 100%. 발굴 후보 3개 이상, 각 5~15%. 대형주 50% 이하.
+"실제로 어떻게 사나?" 안내 (몇 주씩).
+
+<h2>🔍 오늘 새로 발굴된 후보 (대중에 덜 알려진 종목)</h2>
+한국 (DART) + 미국 (SEC) 각 N개. stock-card discovery × 8개 정도.
+
+<h2>🌍 세계 흐름 + 거시 환경</h2>
+세계 사건(전쟁·제재·중국·관세) + 거시(Fed금리·CPI). 각 흐름 → 종목 영향 명시.
+
+<h2>🚀 장중 톱 무버</h2>
+한국·미국 각각 상승/하락/거래량 폭증 Top 3씩.
+
+<h2>🏭 섹터 흐름</h2>
+좋은/나쁜 섹터 각 2~3개.
+
+<h2>📋 관심종목 + 공시 평가</h2>
+종목별 짧게.
+
+<h2>📰 뉴스 한 줄</h2>
+거시 영향 큰 뉴스 3~5줄.
+
+<h2>⚠️ 조심할 것 / 면책</h2>
+
+<h2>📚 어려운 용어 풀이</h2>
+본문 등장한 단어 4~6개 한 줄씩.
+
+# 모든 섹션 디테일 출력. 카드 본문 5~8문장. 위 part1과 중복 X.
+"""
+
+
+def _call_claude(client, system: str, user_prompt: str, max_tok: int, label: str) -> str:
+    """Claude API 한 번 호출 → HTML 텍스트."""
+    logger.info(f"🤖 Claude ({CLAUDE_MODEL}, {label}) 호출 — 입력 {len(user_prompt):,}자, 출력 한도 {max_tok}")
     try:
         response = client.messages.create(
             model=CLAUDE_MODEL,
@@ -910,8 +1010,7 @@ def generate_briefing(data: Dict, mode: str = "full") -> str:
             extra_headers={"anthropic-beta": "output-128k-2025-02-19"},
         )
     except Exception as e:
-        # beta 헤더 미지원이면 기본 호출 fallback (max_tok이 8192 이하면 OK)
-        logger.warning(f"extended output beta 미지원 — 기본 호출 fallback: {e}")
+        logger.warning(f"extended output beta 미지원 — fallback: {e}")
         response = client.messages.create(
             model=CLAUDE_MODEL,
             max_tokens=min(max_tok, 8192),
@@ -919,26 +1018,48 @@ def generate_briefing(data: Dict, mode: str = "full") -> str:
             messages=[{"role": "user", "content": user_prompt}],
         )
 
-    html_content = ""
+    html = ""
     for block in response.content:
         if hasattr(block, "text"):
-            html_content += block.text
-    html_content = html_content.strip()
-
-    # ```html 펜스 제거
-    if html_content.startswith("```"):
-        lines = html_content.split("\n")
-        if lines[-1].startswith("```"):
+            html += block.text
+    html = html.strip()
+    if html.startswith("```"):
+        lines = html.split("\n")
+        if lines and lines[-1].startswith("```"):
             lines = lines[1:-1]
         else:
             lines = lines[1:]
-        html_content = "\n".join(lines)
+        html = "\n".join(lines)
 
     logger.info(
-        f"📝 리포트 생성 완료 — 출력 {len(html_content):,}자 / "
+        f"  ✓ {label} 완료 — 출력 {len(html):,}자 / "
         f"입력토큰 {response.usage.input_tokens} / 출력토큰 {response.usage.output_tokens}"
     )
-    return html_content
+    return html
+
+
+def generate_briefing(data: Dict, mode: str = "full") -> str:
+    """
+    Claude를 두 번 호출해서 결과 합침.
+    - Part 1: 페이지 위쪽 (TL;DR, 팔것, 사지말것, TOP3, 포지션)
+    - Part 2: 페이지 아래쪽 (단타, 매수검토, 분산, 발굴, 거시, 톱무버, 섹터, 평가, 뉴스, 조심, 용어)
+
+    각 호출 8K 토큰 안에 들어가므로 토큰 한도 문제 없음.
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise RuntimeError("ANTHROPIC_API_KEY 환경변수 없음")
+
+    client = Anthropic(api_key=api_key)
+    user_prompt = build_user_prompt(data)
+
+    # 두 호출에 같은 user prompt를 주되 system이 다름
+    html1 = _call_claude(client, SYSTEM_PROMPT_PART1, user_prompt, 8000, "Part1 (위쪽 5섹션)")
+    html2 = _call_claude(client, SYSTEM_PROMPT_PART2, user_prompt, 8000, "Part2 (아래쪽 11섹션)")
+
+    full_html = html1 + "\n\n" + html2
+    logger.info(f"📝 통합 리포트 — 총 {len(full_html):,}자")
+    return full_html
 
 
 if __name__ == "__main__":

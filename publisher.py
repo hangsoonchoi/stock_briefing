@@ -194,23 +194,51 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     font-weight: 700;
     color: #1a2332;
   }}
-  /* 우상단 배지 — 항상 어두운 배경 + 흰 글씨 (대비 강제) */
-  .stock-header .stock-allocation {{
-    font-size: 13px;
+  /* 우상단 배지 — 무조건 어두운 배경 + 흰 글씨 (Claude 인라인 스타일 덮어쓰기) */
+  .stock-card .stock-allocation,
+  .stock-card .stock-header .stock-allocation,
+  .stock-card .stock-allocation * {{
     color: #ffffff !important;
-    font-weight: 700;
-    background: #2c3e50;
-    padding: 4px 10px;
-    border-radius: 12px;
-    white-space: nowrap;
+    font-weight: 700 !important;
+    text-decoration: none !important;
   }}
-  .stock-card.candidate .stock-header .stock-allocation {{ background: #c0392b; }}
-  .stock-card.discovery .stock-header .stock-allocation {{ background: #27ae60; }}
-  .stock-card.watch .stock-header .stock-allocation {{ background: #d68910; }}
-  .stock-card.warning .stock-header .stock-allocation {{ background: #922b21; }}
-  .stock-card.priority-1 .stock-header .stock-allocation {{ background: #d4ac0d; }}
-  .stock-card.priority-2 .stock-header .stock-allocation {{ background: #7f8c8d; }}
-  .stock-card.priority-3 .stock-header .stock-allocation {{ background: #b87333; }}
+  .stock-header .stock-allocation {{
+    font-size: 13px !important;
+    background: #2c3e50 !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+  }}
+  /* 카드 종류별 배지 색 — 모두 어두운 톤으로 흰 글씨 잘 보임 */
+  .stock-card.candidate .stock-header .stock-allocation {{ background: #c0392b !important; }}
+  .stock-card.discovery .stock-header .stock-allocation {{ background: #1e8449 !important; }}
+  .stock-card.watch .stock-header .stock-allocation {{ background: #b9770e !important; }}
+  .stock-card.warning .stock-header .stock-allocation {{ background: #922b21 !important; }}
+  .stock-card.priority-1 .stock-header .stock-allocation {{ background: #b7950b !important; }}
+  .stock-card.priority-2 .stock-header .stock-allocation {{ background: #566573 !important; }}
+  .stock-card.priority-3 .stock-header .stock-allocation {{ background: #935116 !important; }}
+
+  /* 카드 본문 글씨는 항상 어두운 색 (밝은 카드 배경에 어두운 글씨) */
+  .stock-card,
+  .stock-card p,
+  .stock-card li,
+  .stock-card div:not(.stock-allocation) {{
+    color: #2c3e50;
+  }}
+  .stock-card .stock-name,
+  .stock-card h3 {{
+    color: #1a2332 !important;
+  }}
+  /* 가격 — 빨강(상승) / 파랑(하락) 강조 */
+  .stock-card .value.up,
+  .stock-card .price-diff.up {{ color: #c0392b !important; }}
+  .stock-card .value.down,
+  .stock-card .price-diff.down {{ color: #1f618d !important; }}
+  /* 일반 가격 숫자 */
+  .stock-card .value,
+  .stock-card .rec-price,
+  .stock-card .current-price {{ color: #1a2332 !important; }}
 
   .stock-prices {{
     display: grid;
