@@ -9,14 +9,6 @@ on:
     # 단타 모드 — KST 평일 09:00~18:00 매시 (UTC 월~금 0:00~9:00)
     - cron: '0 0-9 * * 1-5'
   workflow_dispatch:  # 수동 실행 가능
-    inputs:
-      mode:
-        description: '실행 모드'
-        type: choice
-        options:
-          - full
-          - quick
-        default: full
 
 permissions:
   contents: write
@@ -41,24 +33,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Determine BRIEF_MODE
-        id: mode
-        run: |
-          MODE="full"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            MODE="${{ github.event.inputs.mode }}"
-          elif [ "${{ github.event.schedule }}" = "30 22 * * 0-4" ]; then
-            MODE="full"
-          else
-            MODE="quick"
-          fi
-          echo "BRIEF_MODE=$MODE" >> $GITHUB_ENV
-          echo "Running in $MODE mode"
-
-      - name: Run briefing
+      - name: Run briefing (통합 모드)
         env:
           PUBLISH_MODE: web
-          BRIEF_MODE: ${{ env.BRIEF_MODE }}
+          BRIEF_MODE: full
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
           SENDER_APP_PASSWORD: ${{ secrets.SENDER_APP_PASSWORD }}
@@ -70,11 +48,13 @@ jobs:
         run: python main.py
 
       # docs/ 폴더 변경사항을 자동 커밋 → GitHub Pages 자동 갱신
+      # 시간 스탬프 파일이 매 실행마다 생성되어 비교 가능 (덮어쓰기 X)
       - name: Commit docs (GitHub Pages)
         if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/ archive/ || true
-          git commit -m "Daily briefing $(date -u +'%Y-%m-%d') [skip ci]" || echo "No changes"
+          TIMESTAMP=$(TZ="Asia/Seoul" date +'%Y-%m-%d %H:%M KST')
+          git commit -m "Briefing ${TIMESTAMP} [skip ci]" || echo "No changes"
           git push || echo "Nothing to push"

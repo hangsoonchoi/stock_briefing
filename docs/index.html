@@ -43,21 +43,36 @@
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }
+  .day-group { margin-bottom: 18px; }
+  .day-group h3 {
+    font-size: 15px;
+    color: #1a2332;
+    margin: 0 0 8px;
+    padding: 6px 8px;
+    background: #ecf0f1;
+    border-radius: 6px;
+  }
   ul.archive-list {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 6px;
   }
   ul.archive-list li {
-    padding: 12px 0;
-    border-bottom: 1px solid #ecf0f1;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid #ecf0f1;
+    border-radius: 6px;
+    text-align: center;
   }
-  ul.archive-list li:last-child { border-bottom: none; }
+  ul.archive-list li:hover { background: #f8f9fa; }
   ul.archive-list a {
     color: #2980b9;
     text-decoration: none;
     font-weight: 500;
-    font-size: 15px;
+    font-size: 14px;
   }
   ul.archive-list a:hover { text-decoration: underline; }
   .empty { color: #95a5a6; padding: 24px; text-align: center; }
@@ -76,11 +91,14 @@
     <p>한국·미국 시장 + 거시 지표 + 임원 매매 공시 자동 분석</p>
   </div>
 
-  <div class="latest-box"><a href="latest.html">📅 가장 최근 리포트 보기 (2026-04-26)</a></div>
+  <div class="latest-box"><a href="latest.html">📅 가장 최근 리포트 (2026-04-26 18:38)</a></div>
 
   <div class="archive">
-    <h3 style="margin: 12px 0;">📚 이전 리포트 (1개)</h3>
-    <ul class="archive-list"><li><a href="2026-04-26.html">📄 2026-04-26</a></li></ul>
+    <h3 style="margin: 12px 0;">📚 이전 리포트 (2개)</h3>
+    <div class="day-group"><h3>📅 2026-04-26</h3><ul class="archive-list">
+<li><a href="2026-04-26.html">📄 (시간 미상)</a></li>
+<li><a href="2026-04-26-1838.html">🕐 18:38</a></li>
+</ul></div>
   </div>
 
   <div class="footer">

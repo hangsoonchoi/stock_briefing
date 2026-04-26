@@ -456,21 +456,36 @@ INDEX_TEMPLATE = """<!DOCTYPE html>
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }}
+  .day-group {{ margin-bottom: 18px; }}
+  .day-group h3 {{
+    font-size: 15px;
+    color: #1a2332;
+    margin: 0 0 8px;
+    padding: 6px 8px;
+    background: #ecf0f1;
+    border-radius: 6px;
+  }}
   ul.archive-list {{
     list-style: none;
     padding: 0;
     margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 6px;
   }}
   ul.archive-list li {{
-    padding: 12px 0;
-    border-bottom: 1px solid #ecf0f1;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid #ecf0f1;
+    border-radius: 6px;
+    text-align: center;
   }}
-  ul.archive-list li:last-child {{ border-bottom: none; }}
+  ul.archive-list li:hover {{ background: #f8f9fa; }}
   ul.archive-list a {{
     color: #2980b9;
     text-decoration: none;
     font-weight: 500;
-    font-size: 15px;
+    font-size: 14px;
   }}
   ul.archive-list a:hover {{ text-decoration: underline; }}
   .empty {{ color: #95a5a6; padding: 24px; text-align: center; }}
@@ -505,10 +520,18 @@ INDEX_TEMPLATE = """<!DOCTYPE html>
 
 
 def _list_archive() -> List[Tuple[str, Path]]:
-    """docs/ 안의 YYYY-MM-DD.html 파일 목록 (최신순)."""
+    """
+    docs/ 안의 시간 스탬프 HTML 파일 목록 (최신순).
+    포맷: YYYY-MM-DD-HHMM.html (예: 2026-04-26-1430.html)
+    또는 (구버전) YYYY-MM-DD.html
+    """
     files = []
     for p in DOCS_DIR.glob("*.html"):
-        if re.match(r"^\d{4}-\d{2}-\d{2}\.html$", p.name):
+        # 시간 포함: 2026-04-26-1430.html
+        if re.match(r"^\d{4}-\d{2}-\d{2}-\d{4}\.html$", p.name):
+            files.append((p.stem, p))
+        # 날짜만: 2026-04-26.html (legacy)
+        elif re.match(r"^\d{4}-\d{2}-\d{2}\.html$", p.name):
             files.append((p.stem, p))
     files.sort(key=lambda x: x[0], reverse=True)
     return files
@@ -516,45 +539,51 @@ def _list_archive() -> List[Tuple[str, Path]]:
 
 def publish(html_body: str, dry_run: bool = False) -> Path:
     """
-    오늘 날짜 HTML 페이지 작성 + latest.html + index.html 갱신.
-    반환값은 오늘 날짜 페이지 경로.
+    시간 스탬프 HTML 페이지 작성 + latest.html + index.html 갱신.
+    매시간 실행해도 덮어쓰지 않고 비교 가능하게 별도 파일.
     """
-    today = datetime.now().strftime("%Y-%m-%d")
-    today_kor = datetime.now().strftime("%Y년 %m월 %d일 (%a)")
+    now = datetime.now()
+    timestamp = now.strftime("%Y-%m-%d-%H%M")  # 예: 2026-04-26-1430
+    date_kor = now.strftime("%Y년 %m월 %d일 (%a) %H:%M KST")
 
     page = PAGE_TEMPLATE.format(
-        title=f"시장 브리핑 — {today}",
-        header="📊 오늘의 시장 브리핑",
-        date_str=today_kor,
+        title=f"시장 브리핑 — {timestamp}",
+        header="📊 시장 브리핑",
+        date_str=date_kor,
         body=html_body,
     )
 
-    today_path = DOCS_DIR / f"{today}.html"
+    timestamped_path = DOCS_DIR / f"{timestamp}.html"
     latest_path = DOCS_DIR / "latest.html"
 
     if dry_run:
-        logger.info(f"[dry_run] would write {today_path} & {latest_path}")
+        logger.info(f"[dry_run] would write {timestamped_path} & latest.html")
     else:
-        today_path.write_text(page, encoding="utf-8")
+        timestamped_path.write_text(page, encoding="utf-8")
         latest_path.write_text(page, encoding="utf-8")
-        logger.info(f"📁 웹페이지 저장: {today_path.name} & latest.html")
+        logger.info(f"📁 웹페이지 저장: {timestamped_path.name} (+ latest.html 갱신)")
 
-    # index.html 갱신
     rebuild_index()
-
-    return today_path
+    return timestamped_path
 
 
 def rebuild_index() -> Path:
-    """archive 목록 기반으로 index.html 새로 작성."""
+    """archive 목록 기반으로 index.html 새로 작성. 날짜별로 그룹핑 + 시간 표시."""
     files = _list_archive()
     count = len(files)
 
     if files:
-        latest_date, _ = files[0]
+        latest_stem, _ = files[0]
+        # 시간 정보 파싱
+        if re.match(r"^\d{4}-\d{2}-\d{2}-\d{4}$", latest_stem):
+            d = latest_stem[:10]
+            t = latest_stem[11:13] + ":" + latest_stem[13:15]
+            latest_label = f"{d} {t}"
+        else:
+            latest_label = latest_stem
         latest_block = (
             f'<div class="latest-box">'
-            f'<a href="latest.html">📅 가장 최근 리포트 보기 ({latest_date})</a>'
+            f'<a href="latest.html">📅 가장 최근 리포트 ({latest_label})</a>'
             f'</div>'
         )
     else:
@@ -564,15 +593,29 @@ def rebuild_index() -> Path:
             '</div>'
         )
 
+    # 날짜별로 그룹핑
     if files:
-        items = []
-        for date_str, _ in files:
-            items.append(
-                f'<li><a href="{date_str}.html">📄 {date_str}</a></li>'
-            )
-        archive_html = (
-            '<ul class="archive-list">' + "\n".join(items) + "</ul>"
-        )
+        from collections import defaultdict
+        grouped = defaultdict(list)
+        for stem, _ in files:
+            if re.match(r"^\d{4}-\d{2}-\d{2}-\d{4}$", stem):
+                date = stem[:10]
+                time_str = stem[11:13] + ":" + stem[13:15]
+                grouped[date].append((time_str, stem))
+            else:
+                grouped[stem].append(("—", stem))
+
+        sections = []
+        for date in sorted(grouped.keys(), reverse=True):
+            entries = sorted(grouped[date], reverse=True)
+            sections.append(f'<div class="day-group"><h3>📅 {date}</h3><ul class="archive-list">')
+            for time_str, stem in entries:
+                if time_str == "—":
+                    sections.append(f'<li><a href="{stem}.html">📄 (시간 미상)</a></li>')
+                else:
+                    sections.append(f'<li><a href="{stem}.html">🕐 {time_str}</a></li>')
+            sections.append('</ul></div>')
+        archive_html = "\n".join(sections)
     else:
         archive_html = '<p class="empty">아직 리포트가 없습니다.</p>'
 

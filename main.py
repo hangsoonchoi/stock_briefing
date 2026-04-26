@@ -56,66 +56,90 @@ def main() -> int:
     )
     logger.info(f"PUBLISH_MODE = {publish_mode} | BRIEF_MODE = {brief_mode}")
 
-    # 2. 데이터 수집 (모드별 분기)
-    from data_fetcher import fetch_all_data
+    # 2. 데이터 수집 — 통합 모드 (매시간 모든 정보 + 단타 데이터 같이)
+    # 변하지 않는 데이터(거시·공시·발굴·종목별 뉴스)는 캐시(2~6시간)
+    # 빠른 데이터(가격·5분봉·톱무버·포지션)는 매번 fresh
+    from data_fetcher import (
+        fetch_all_data,
+        fetch_korean_stock_news_per_ticker,
+        fetch_us_stock_news_per_ticker,
+        fetch_global_theme_news,
+    )
     from intraday_fetcher import fetch_quick_data
+    from macro_fetcher import fetch_macro_indicators
+    from filings_fetcher import fetch_all_filings
+    from screener import screen_market
+    from position_tracker import evaluate_positions
+    from cache import fetch_with_cache
 
-    is_quick = (brief_mode == "quick")
-    data = safe_run("시장 데이터", fetch_all_data, quick=is_quick) or {
+    # 빠르게 변하는 시장 데이터 (캐시 X) — 항상 fresh
+    data = safe_run("시장 데이터", fetch_all_data, quick=True) or {
         "collected_at": datetime.now().isoformat(),
         "indicators": [], "sectors": [], "watchlist": [], "news": [],
     }
 
-    if brief_mode == "full":
-        # 풀 모드: 거시·공시·발굴까지 다 수집
-        from macro_fetcher import fetch_macro_indicators
-        from filings_fetcher import fetch_all_filings
-        from screener import screen_market
+    # 거시 지표: 6시간 캐시 (FRED는 자주 안 바뀜)
+    data["macro"] = safe_run(
+        "거시 지표(캐시)", fetch_with_cache, "macro", fetch_macro_indicators, 21600
+    ) or []
 
-        data["macro"] = safe_run("거시 지표", fetch_macro_indicators) or []
-        data["filings"] = safe_run("공시", fetch_all_filings) or {"sec": {}, "dart": {}}
-        data["screener"] = safe_run("발굴 스캔", screen_market, days=7) or {
-            "kr_candidates": [], "us_candidates": [], "scanned_days": 7,
-        }
-    else:
-        # 단타 모드: 빠른 데이터 + 아침 추천 포지션 평가
-        from position_tracker import evaluate_positions
+    # 공시: 4시간 캐시
+    data["filings"] = safe_run(
+        "공시(캐시)", fetch_with_cache, "filings", fetch_all_filings, 14400
+    ) or {"sec": {}, "dart": {}}
 
-        quick = safe_run("단타 데이터", fetch_quick_data) or {
-            "intraday_watchlist": [], "top_movers": {},
-        }
-        data["intraday"] = quick
+    # 발굴: 3시간 캐시
+    data["screener"] = safe_run(
+        "발굴 스캔(캐시)", fetch_with_cache, "screener", screen_market, 10800, days=7
+    ) or {"kr_candidates": [], "us_candidates": [], "scanned_days": 7}
 
-        # 🚨 핵심: 아침에 추천된 포지션들 현재 상태 평가
-        evaluated = safe_run("포지션 평가", evaluate_positions) or []
-        data["evaluated_positions"] = evaluated
-        logger.info(f"  📌 추적 중인 아침 추천 포지션 {len(evaluated)}개")
+    # 종목별 뉴스: 2시간 캐시
+    data["kr_stock_news"] = safe_run(
+        "한국 종목별 뉴스(캐시)", fetch_with_cache, "kr_stock_news",
+        fetch_korean_stock_news_per_ticker, 7200
+    ) or {}
+    data["us_stock_news"] = safe_run(
+        "미국 종목별 뉴스(캐시)", fetch_with_cache, "us_stock_news",
+        fetch_us_stock_news_per_ticker, 7200
+    ) or {}
+    data["theme_news"] = safe_run(
+        "테마 뉴스(캐시)", fetch_with_cache, "theme_news",
+        fetch_global_theme_news, 7200
+    ) or []
 
-        # 빈 자리 채움 (analyzer가 안전하게 작동하도록)
-        data["macro"] = []
-        data["filings"] = {"sec": {}, "dart": {}}
-        data["screener"] = {"kr_candidates": [], "us_candidates": [], "scanned_days": 0}
+    # 섹터: 1시간 캐시 (장중에는 의미 있게 변함)
+    from data_fetcher import fetch_sector_performance
+    data["sectors"] = safe_run(
+        "섹터(캐시)", fetch_with_cache, "sectors", fetch_sector_performance, 3600
+    ) or []
+
+    # 단타 데이터 (5분봉, 톱무버) — 매번 fresh
+    quick = safe_run("단타 데이터", fetch_quick_data) or {
+        "intraday_watchlist": [], "top_movers": {},
+    }
+    data["intraday"] = quick
+
+    # 아침 추천 포지션 평가 — 매번 fresh (현재가 비교)
+    evaluated = safe_run("포지션 평가", evaluate_positions) or []
+    data["evaluated_positions"] = evaluated
+    logger.info(f"  📌 추적 중인 아침 추천 포지션 {len(evaluated)}개")
 
     n_ind = len(data.get("indicators", []))
     n_sec = len(data.get("sectors", []))
     n_stk = len(data.get("watchlist", []))
     n_news = len(data.get("news", []))
-    if brief_mode == "full":
-        n_macro = len(data.get("macro", []))
-        n_dart = len(data.get("filings", {}).get("dart", {}))
-        logger.info(
-            f"\n[FULL] 수집 — 지표 {n_ind} / 섹터 {n_sec} / 종목 {n_stk} / "
-            f"뉴스 {n_news} / 거시 {n_macro} / DART {n_dart}"
-        )
-    else:
-        intra = data.get("intraday", {})
-        movers = intra.get("top_movers", {})
-        logger.info(
-            f"\n[QUICK] 수집 — 지표 {n_ind} / 종목 {n_stk} (5분봉) / "
-            f"뉴스 {n_news} / 톱무버: KR↑{len(movers.get('kr_gainers',[]))} "
-            f"KR↓{len(movers.get('kr_losers',[]))} "
-            f"US↑{len(movers.get('us_gainers',[]))} US↓{len(movers.get('us_losers',[]))}"
-        )
+    n_macro = len(data.get("macro", []))
+    n_dart = len(data.get("filings", {}).get("dart", {}))
+    n_kr_disc = len(data.get("screener", {}).get("kr_candidates", []))
+    intra = data.get("intraday", {})
+    movers = intra.get("top_movers", {})
+    logger.info(
+        f"\n[수집 요약] 지표 {n_ind} / 섹터 {n_sec} / 종목 {n_stk} / 뉴스 {n_news} / "
+        f"거시 {n_macro} / DART {n_dart} / 발굴 {n_kr_disc} / "
+        f"단타무버: KR↑{len(movers.get('kr_gainers',[]))} KR↓{len(movers.get('kr_losers',[]))} "
+        f"US↑{len(movers.get('us_gainers',[]))} US↓{len(movers.get('us_losers',[]))} / "
+        f"포지션 {len(evaluated)}"
+    )
 
     # 데이터가 너무 빈약하면 중단
     if n_ind == 0 and n_stk == 0 and n_macro == 0:

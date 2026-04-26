@@ -173,45 +173,60 @@ CNBC/연합뉴스에 헤드라인 뜬 시점이면 이미 늦었다. 그래서:
 - TL;DR 요약은 <div class="tldr">...</div> 안에
 - 각 섹션 마지막 "→ 그래서 어떻게?" 결론은 <div class="so-what">→ ...</div> 안에
 
-# 출력 섹션 순서
+# 출력 섹션 순서 (매시간 갱신 — 단타 + 풀 분석 통합)
 
-<h2>📝 오늘 한 줄 정리 (TL;DR)</h2>
+<h2>📝 한 줄 정리 (TL;DR)</h2>
 <div class="tldr">
-3~4줄 짧게. 어려운 단어 하나도 없이.
+지금 시각 + 시장 분위기 + 본인 포지션 핵심 상태 + 단타 후보 1줄. 4줄 이내.
 </div>
 
-<h2>🎯 오늘 행동 가이드</h2>
+<h2>📌 아침 추천 포지션 — 지금 상태</h2>
+**최우선 섹션.** evaluated_positions 데이터 활용:
+- 각 포지션마다 stock-card (data-section="position-update")
+- 헤더: "📌 보유" / "✅ 1차 익절 도달" / "🚨 손절 도달" / "⚠️ 손절 임박" / "📉 단기 하락"
+- 추천가 → 현재가 → 변동률 → **명확한 권고**:
+  - 손절 도달 → "**즉시 매도 검토**" (warning 카드)
+  - 손절 임박 (-5~7%) → "**손절가 근접 — 매도 준비**"
+  - 1차 익절 도달 → "**일부(50%) 매도 검토**" (discovery 카드)
+  - 2차 익절 도달 → "**대부분(80%) 매도 검토**"
+  - -3% 이내 → "**보유 유지**"
+  - +3% 이내 → "**보유 유지, 익절가 근접 시 액션**"
+- evaluated_positions 비어있으면 "오늘 아침 풀 분석 데이터 없음 — 새 추천부터 시작" 한 줄.
+
+<h2>⚡ 지금 단타 후보 (Top 1~3)</h2>
+intraday top_movers + watchlist intraday 활용:
+- 거래량 폭증 + 상승 종목 우선
+- stock-card candidate × 1~3개 (단타용 짧은 진입가/익절가/손절가, ±1~3%)
+
+<h2>🎯 오늘 행동 가이드 (장기 매수 검토)</h2>
 - 매수 검토 후보 → stock-card candidate × 1~3개
 - 관망 → stock-card watch × N개
 - 절대 하지 말 것 → stock-card warning 1개
 
 <h2>💰 300만원 분산 시뮬레이션 (100% 투입)</h2>
 - 종목별 stock-card candidate × N개. 합계 100%.
-- 마지막에 "실제로 어떻게 사나?" 짧은 안내 (몇 주씩 살 수 있는지 계산)
+- 발굴 후보 1~2개 10~20% 비중 포함 필수.
+- 마지막에 "실제로 어떻게 사나?" (몇 주씩 살 수 있는지)
 
-<h2>🔍 오늘 새로 발굴된 후보 (대중에 덜 알려진 종목)</h2>
-- 한국 (DART 기준) — stock-card discovery × N개
-- 미국 (SEC 기준) — stock-card discovery × N개
+<h2>🔍 새로 발굴된 후보 (대중에 덜 알려진 종목)</h2>
+- 한국 (DART) — stock-card discovery × N개
+- 미국 (SEC) — stock-card discovery × N개
 
 <h2>🌍 세계 흐름 + 거시 환경</h2>
-**두 개를 묶어서 다룬다:**
-1. **세계 사건/이슈** — 전쟁·제재·선거·정상회담·중국 경기·미국 관세·중동 긴장 등.
-   각각 "어떤 종목/섹터에 유리·불리한지" 인과관계 명시.
-2. **거시 지표** — Fed금리, CPI, 실업률, 금리차. 어려운 단어 옆에 풀이.
+세계 사건(전쟁·제재·선거·중국·관세) + 거시(Fed금리·CPI) 묶어서.
+각 흐름 → watchlist/발굴 후보 중 영향 종목 명시.
 
-각 흐름 옆에 본인 watchlist + 발굴 후보 중 영향받는 종목명을 명시 (예: "→ 삼성전자에 부정", "→ 한화오션 같은 방산주에 호재").
-
-끝에 <div class="so-what">→ ...</div> 로 정리.
+<h2>🚀 장중 톱 무버</h2>
+한국·미국 각각 상승/하락/거래량 폭증 Top 3씩. 짧은 표.
 
 <h2>🏭 섹터 흐름</h2>
-짧은 표 OK (섹터명 / 1일% / 5일% / 20일% — 4컬럼).
-끝에 <div class="so-what">→ ...</div>
+좋은/나쁜 섹터 각 2~3개. 짧은 표.
 
-<h2>📋 관심종목 한 줄 평가</h2>
-종목별로 짧게. 표보다 카드 형식 권장.
+<h2>📋 관심종목 + 공시 평가</h2>
+종목별 짧게.
 
 <h2>📰 뉴스 한 줄</h2>
-3~5줄 짧게.
+거시 영향 큰 뉴스 3~5줄.
 
 <h2>⚠️ 조심할 것 / 면책</h2>
 
@@ -400,9 +415,23 @@ def _format_screener(screener: Dict) -> str:
 
 
 def build_user_prompt(data: Dict) -> str:
-    parts = [f"# 데이터 수집 시각: {data['collected_at']}\n"]
+    from position_tracker import format_positions_for_prompt
+    parts = [f"# 데이터 수집 시각 (KST): {data['collected_at']}\n"]
 
-    parts.append("## 1. 거시 경제 지표 (FRED)")
+    # 🚨 0. 가장 중요 — 아침 추천 포지션 현재 상태 (단타 모드 핵심)
+    eval_positions = data.get("evaluated_positions", [])
+    parts.append(format_positions_for_prompt(eval_positions))
+
+    # ⚡ 0-2. 단타 데이터 — 5분봉 + 톱무버 (장중 흐름)
+    intraday = data.get("intraday", {})
+    if intraday:
+        parts.append("\n## ⚡ 단타 모드 데이터 (지금 이 순간)")
+        parts.append("\n### 관심종목 5분봉 흐름")
+        parts.append(_format_intraday_watchlist(intraday.get("intraday_watchlist", [])))
+        parts.append("\n### 장중 톱 무버")
+        parts.append(_format_top_movers(intraday.get("top_movers", {})))
+
+    parts.append("\n## 1. 거시 경제 지표 (FRED)")
     parts.append(_format_macro(data.get("macro", [])))
 
     parts.append("\n## 2. 시장 지표 (지수/환율/원자재/금리)")
@@ -684,23 +713,19 @@ QUICK_SYSTEM_PROMPT = f"""너는 한국인 단타 트레이더(운용자금 약 
 
 
 def generate_briefing(data: Dict, mode: str = "full") -> str:
-    """Claude API 호출 → HTML 리포트. mode = 'full' or 'quick'."""
+    """Claude API 호출 → HTML 리포트. 통합 모드 — 단타 + 풀분석 한꺼번에."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         raise RuntimeError("ANTHROPIC_API_KEY 환경변수 없음")
 
     client = Anthropic(api_key=api_key)
 
-    if mode == "quick":
-        user_prompt = build_quick_user_prompt(data)
-        system = QUICK_SYSTEM_PROMPT
-        max_tok = 4000  # 단타는 짧게
-    else:
-        user_prompt = build_user_prompt(data)
-        system = SYSTEM_PROMPT
-        max_tok = MAX_OUTPUT_TOKENS
+    # 항상 통합 프롬프트 사용 (단타 + 풀분석 다 포함)
+    user_prompt = build_user_prompt(data)
+    system = SYSTEM_PROMPT
+    max_tok = MAX_OUTPUT_TOKENS
 
-    logger.info(f"🤖 Claude ({CLAUDE_MODEL}, mode={mode}) 호출 — 입력 {len(user_prompt):,}자")
+    logger.info(f"🤖 Claude ({CLAUDE_MODEL}, 통합) 호출 — 입력 {len(user_prompt):,}자")
     response = client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=max_tok,
