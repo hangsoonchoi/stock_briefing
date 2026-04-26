@@ -1,50 +1,50 @@
 {
-  "saved_at": "2026-04-26T22:04:52.071217",
+  "saved_at": "2026-04-26T22:13:12.578112",
   "date": "2026-04-26",
   "positions": [
     {
-      "ticker": "CRWV",
-      "name": "CoreWeaveCRWV · 미국 나스닥",
-      "section": "sell-now",
+      "ticker": "000660.KS",
+      "name": "SK하이닉스000660.KS · 코스피",
+      "section": "avoid",
       "card_type": "warning",
-      "allocation": "🚨 즉시 매도 검토",
-      "recommended_at": 110.13,
-      "target_1": 120.0,
-      "target_2": 130.0,
-      "stop_loss": 101.0
+      "allocation": "추격매수 금지",
+      "recommended_at": 1225000.0,
+      "target_1": 1320000.0,
+      "target_2": 1450000.0,
+      "stop_loss": 1130000.0
     },
     {
       "ticker": "NVDA",
-      "name": "NVIDIANVDA · 미국 나스닥",
+      "name": "NVIDIANVDA · 나스닥",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "🚫 추격매수 위험",
+      "allocation": "추격매수 금지",
       "recommended_at": 208.19,
       "target_1": 225.0,
       "target_2": 240.0,
       "stop_loss": 193.0
     },
     {
-      "ticker": "000660.KS",
-      "name": "SK하이닉스000660.KS · 코스피",
+      "ticker": "CRWV",
+      "name": "CoreWeaveCRWV · 나스닥",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "🚫 과매수 구간",
-      "recommended_at": 1222000.0,
-      "target_1": 1320000.0,
-      "target_2": 1450000.0,
-      "stop_loss": 1130000.0
+      "allocation": "신규 매수 절대 X + 기존 보유도 검토",
+      "recommended_at": 110.13,
+      "target_1": 120.0,
+      "target_2": 130.0,
+      "stop_loss": 101.0
     },
     {
-      "ticker": "005930.KS",
-      "name": "삼성전자005930.KS · 코스피",
-      "section": "avoid",
+      "ticker": "CRWV",
+      "name": "🚨 CoreWeave — 비중 축소 검토CRWV · 나스닥",
+      "section": "sell-now",
       "card_type": "warning",
-      "allocation": "🚫 파업 리스크 주의",
-      "recommended_at": 219500.0,
-      "target_1": 237000.0,
-      "target_2": 263000.0,
-      "stop_loss": 200000.0
+      "allocation": "⚠️ 손절 임박",
+      "recommended_at": 110.13,
+      "target_1": 120.0,
+      "target_2": 130.0,
+      "stop_loss": 101.0
     },
     {
       "ticker": "373220.KS",
@@ -59,7 +59,7 @@
     },
     {
       "ticker": "MSFT",
-      "name": "🥈 MicrosoftMSFT · 미국 나스닥",
+      "name": "🥈 MicrosoftMSFT · 나스닥",
       "section": "top-priority",
       "card_type": "candidate",
       "allocation": "20% · 600,000원",
@@ -70,10 +70,10 @@
     },
     {
       "ticker": "112610.KS",
-      "name": "🥉 씨에스윈드112610.KS · 코스피 · ⚠️ 추가 조사 필요",
+      "name": "🥉 씨에스윈드112610 · 코스피 | ⚠️ 추가 조사 필요",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "10% · 300,000원 (소량 관심)",
+      "allocation": "10% · 300,000원 (소액 탐색)",
       "recommended_at": 0.0,
       "target_1": 0.0,
       "target_2": 0.0,
@@ -81,36 +81,14 @@
     },
     {
       "ticker": "CRWV",
-      "name": "🚨 손절 임박 — CoreWeaveCRWV · 미국",
+      "name": "🚨 손절 임박 — CoreWeaveCRWV · 나스닥",
       "section": "positions",
       "card_type": "warning",
-      "allocation": "⚠️ 즉시 매도 검토",
+      "allocation": "⚠️ 즉시 비중 축소 검토",
       "recommended_at": 110.13,
       "target_1": 120.0,
       "target_2": 130.0,
       "stop_loss": 101.0
-    },
-    {
-      "ticker": "NVDA",
-      "name": "📌 보유 — NVIDIANVDA · 미국",
-      "section": "positions",
-      "card_type": "warning",
-      "allocation": "보유 유지 / 추가 매수 자제",
-      "recommended_at": 208.19,
-      "target_1": 225.0,
-      "target_2": 240.0,
-      "stop_loss": 193.0
-    },
-    {
-      "ticker": "000660.KS",
-      "name": "📌 보유 — SK하이닉스000660.KS · 한국",
-      "section": "positions",
-      "card_type": "warning",
-      "allocation": "보유 유지 / 신규 추가 자제",
-      "recommended_at": 1222000.0,
-      "target_1": 1320000.0,
-      "target_2": 1450000.0,
-      "stop_loss": 1130000.0
     }
   ]
 }
