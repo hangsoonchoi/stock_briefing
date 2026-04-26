@@ -93,8 +93,7 @@ def scan_dart_insider_filings(days: int = 7, max_per_market: int = 60) -> List[D
 
 def aggregate_dart_candidates(filings: List[Dict], top_n: int = 12) -> List[Dict]:
     """
-    회사별로 공시 횟수 묶어서 top_n 추출.
-    같은 회사에 임원 매수 공시가 여러 번 있으면 더 강한 신호.
+    회사별로 공시 횟수 묶어서 top_n 추출 + 현재가 같이 가져옴.
     """
     by_corp = defaultdict(list)
     for f in filings:
@@ -106,15 +105,11 @@ def aggregate_dart_candidates(filings: List[Dict], top_n: int = 12) -> List[Dict
     candidates = []
     for code, items in by_corp.items():
         first = items[0]
-        # 종목 코드 (6자리)
         stock_code = first.get("stock_code", "").strip()
         candidates.append({
             "corp_code": code,
             "corp_name": first.get("corp_name"),
             "stock_code": stock_code,
-            "ticker_yf": (
-                f"{stock_code}.KS" if stock_code and len(stock_code) == 6 else None
-            ),  # 일단 KS로. KQ도 있을 수 있는데 yfinance에서 둘 다 시도 가능
             "filing_count": len(items),
             "recent_titles": [it.get("report_nm") for it in items[:3]],
             "recent_dates": [it.get("rcept_dt") for it in items[:3]],
@@ -125,12 +120,41 @@ def aggregate_dart_candidates(filings: List[Dict], top_n: int = 12) -> List[Dict
             ),
         })
 
-    # 공시 빈도순 (같으면 가장 최근 날짜순)
     candidates.sort(
         key=lambda c: (c["filing_count"], max(c["recent_dates"]) if c["recent_dates"] else ""),
         reverse=True,
     )
-    return candidates[:top_n]
+    top = candidates[:top_n]
+
+    # top_n 후보들 현재가 가져오기 (yfinance — KS 또는 KQ 시도)
+    try:
+        import yfinance as yf
+        for c in top:
+            sc = c["stock_code"]
+            if not sc or len(sc) != 6:
+                continue
+            for suffix in (".KS", ".KQ"):
+                try:
+                    tk = yf.Ticker(f"{sc}{suffix}")
+                    hist = tk.history(period="5d", interval="1d")
+                    if hist is None or hist.empty:
+                        continue
+                    last = hist.iloc[-1]
+                    prev = hist.iloc[-2] if len(hist) >= 2 else last
+                    c["ticker_yf"] = f"{sc}{suffix}"
+                    c["last_price"] = round(float(last["Close"]), 2)
+                    c["change_pct"] = round(
+                        (last["Close"] - prev["Close"]) / prev["Close"] * 100, 2
+                    ) if prev is not None else None
+                    c["volume"] = int(last["Volume"]) if last["Volume"] else 0
+                    break
+                except Exception:
+                    continue
+            time.sleep(0.1)
+    except Exception as e:
+        logger.warning(f"발굴 후보 현재가 fetch 실패: {e}")
+
+    return top
 
 
 # =============================================================

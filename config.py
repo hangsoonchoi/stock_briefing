@@ -144,15 +144,59 @@ FRED_SERIES = {
 # 주의: 뉴스는 "확인용"이지 "원천 시그널"이 아님.
 # 진짜 시그널은 SEC, DART, FRED, CFTC 데이터에서 나옴.
 NEWS_FEEDS = [
-    # 글로벌
+    # 글로벌 시장·경제
     ("Reuters Business", "https://www.reutersagency.com/feed/?best-topics=business-finance&post_type=best"),
     ("CNBC Markets", "https://www.cnbc.com/id/15839069/device/rss/rss.html"),
     ("MarketWatch", "https://feeds.content.dowjones.io/public/rss/mw_topstories"),
-    # 한국
+    ("Bloomberg Markets (top news)", "https://feeds.bloomberg.com/markets/news.rss"),
+    ("Yahoo Finance Headlines", "https://finance.yahoo.com/news/rssindex"),
+    # 글로벌 지정학·세계 흐름 (전쟁·선거·정상회담·제재 등)
+    ("BBC World", "http://feeds.bbci.co.uk/news/world/rss.xml"),
+    ("Reuters World", "https://www.reutersagency.com/feed/?best-topics=world&post_type=best"),
+    ("Al Jazeera", "https://www.aljazeera.com/xml/rss/all.xml"),
+    ("AP World", "https://feeds.apnews.com/rss/apf-topnews"),
+    # 중국·아시아
+    ("SCMP China Economy", "https://www.scmp.com/rss/318198/feed"),
+    ("Nikkei Asia", "https://asia.nikkei.com/rss/feed/nar"),
+    # 테크·AI 산업
+    ("TechCrunch", "https://techcrunch.com/feed/"),
+    ("The Verge", "https://www.theverge.com/rss/index.xml"),
+    # 에너지·원자재
+    ("OilPrice", "https://oilprice.com/rss/main"),
+    # 한국 — 일반·경제·사회 (노동·정치 이슈 포함)
     ("한경 마켓", "https://www.hankyung.com/feed/finance"),
+    ("한경 산업", "https://www.hankyung.com/feed/industry"),
+    ("연합뉴스 경제", "https://www.yonhapnewstv.co.kr/category/news/economy/feed/"),
+    ("연합뉴스 사회", "https://www.yonhapnewstv.co.kr/category/news/society/feed/"),
+    ("매일경제 증권", "https://www.mk.co.kr/rss/50200011/"),
+    ("매일경제 산업", "https://www.mk.co.kr/rss/50100032/"),
+    ("머니투데이", "https://rss.mt.co.kr/mt_rss.xml"),
+    ("이데일리 경제", "https://rss.edaily.co.kr/economy_news.xml"),
 ]
 
-MAX_ARTICLES_PER_FEED = 5  # 줄임. 뉴스 비중 낮춤.
+MAX_ARTICLES_PER_FEED = 4  # 피드 늘어났으니 피드당 갯수는 줄임 (총량 비슷하게)
+
+# Google News 키워드 검색 — 종목 외 거시·테마 이슈 포착용
+# 검색어 / 언어 / 국가
+GLOBAL_NEWS_QUERIES = [
+    ("AI semiconductor", "en", "US"),
+    ("Federal Reserve interest rate", "en", "US"),
+    ("China economy stimulus", "en", "US"),
+    ("Geopolitical risk Middle East", "en", "US"),
+    ("EV battery industry", "en", "US"),
+    ("Bitcoin cryptocurrency regulation", "en", "US"),
+    ("미국 관세 무역", "ko", "KR"),  # 미국발 한국 영향
+    ("반도체 보조금", "ko", "KR"),
+    ("원/달러 환율", "ko", "KR"),
+]
+
+# 종목별 네이버 뉴스 — Korean watchlist 종목 코드(6자리) 매핑
+# 005930 → 삼성전자 / 000660 → SK하이닉스 / 373220 → LG에너지솔루션
+NAVER_STOCK_CODES = {
+    "005930": "삼성전자",
+    "000660": "SK하이닉스",
+    "373220": "LG에너지솔루션",
+}
 
 # ============================================================
 # 기술적 지표 설정

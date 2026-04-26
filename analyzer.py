@@ -120,9 +120,15 @@ CNBC/연합뉴스에 헤드라인 뜬 시점이면 이미 늦었다. 그래서:
 
 표는 한글이 가로로 좁아지면 음절 단위로 부서져서 가독성이 망가진다. 카드 형식이 PC·모바일 모두에서 압도적으로 잘 보인다.
 
-각 종목 카드의 표준 HTML 구조 (data-ticker / data-recommended-at 속성 필수 — JS 실시간 가격 갱신용):
+각 종목 카드의 표준 HTML 구조 (데이터 속성 6개 모두 필수 — JS 실시간 가격 + 매시간 추적용):
 
-<div class="stock-card candidate" data-ticker="005930.KS" data-recommended-at="219500">
+<div class="stock-card candidate"
+     data-ticker="005930.KS"
+     data-recommended-at="219500"
+     data-target1="237000"
+     data-target2="263000"
+     data-stop="200000"
+     data-section="simulation">
   <div class="stock-header">
     <h3 class="stock-name">삼성전자 <small style="font-weight:400; color:#7f8c8d;">005930.KS · 한국</small></h3>
     <span class="stock-allocation">25% · 750,000원</span>
@@ -141,10 +147,18 @@ CNBC/연합뉴스에 헤드라인 뜬 시점이면 이미 늦었다. 그래서:
   <div class="stock-reason">자사주 매입 공시 2건 + 임원 공시. RSI 69 (적정 구간). 회사가 자기 주식 매입 = 내부 자신감 신호.</div>
 </div>
 
-⚠️ data-ticker와 data-recommended-at은 절대 빠뜨리지 마라. 이게 있어야 페이지에서 실시간 가격 + 추천 시점 대비 변동률이 표시된다.
+⚠️ **6개 data-* 속성 절대 빠뜨리지 마라**:
+- data-ticker: yfinance 기준 티커 (한국=종목코드.KS/.KQ, 미국=대문자)
+- data-recommended-at: 추천 시 가격 (숫자만, 단위 X). 예: 219500, 271.06
+- data-target1: 1차 익절가 (숫자)
+- data-target2: 2차 익절가 (숫자)
+- data-stop: 손절가 (숫자)
+- data-section: "simulation"(300만원 분산), "candidate"(매수 검토), "watch"(관망), "discovery"(발굴)
 
-- data-ticker: yfinance 기준 티커 (한국=종목코드.KS 또는 .KQ, 미국=대문자 티커)
-- data-recommended-at: 데이터에서 받은 현재가(close) — 단위 없는 숫자만. 예: 219500 또는 219.50
+이 속성들이 빠지면:
+1. 페이지에서 실시간 가격 갱신 안 됨
+2. 매시간 단타 모드가 아침 추천 종목을 추적할 수 없음 → "보유? 손절?" 판단 불가
+3. **결과적으로 사용자가 매매 결정 못함** = 시스템 의미 사라짐
 
 카드 종류 (CSS class):
 - `stock-card candidate` : 매수 검토 후보 (빨간 줄)
@@ -179,9 +193,15 @@ CNBC/연합뉴스에 헤드라인 뜬 시점이면 이미 늦었다. 그래서:
 - 한국 (DART 기준) — stock-card discovery × N개
 - 미국 (SEC 기준) — stock-card discovery × N개
 
-<h2>🌐 거시 환경 (쉽게 풀어서)</h2>
-짧은 표 가능. Fed금리, 금리차, CPI. 어려운 단어 옆에 풀이.
-끝에 <div class="so-what">→ ...</div>
+<h2>🌍 세계 흐름 + 거시 환경</h2>
+**두 개를 묶어서 다룬다:**
+1. **세계 사건/이슈** — 전쟁·제재·선거·정상회담·중국 경기·미국 관세·중동 긴장 등.
+   각각 "어떤 종목/섹터에 유리·불리한지" 인과관계 명시.
+2. **거시 지표** — Fed금리, CPI, 실업률, 금리차. 어려운 단어 옆에 풀이.
+
+각 흐름 옆에 본인 watchlist + 발굴 후보 중 영향받는 종목명을 명시 (예: "→ 삼성전자에 부정", "→ 한화오션 같은 방산주에 호재").
+
+끝에 <div class="so-what">→ ...</div> 로 정리.
 
 <h2>🏭 섹터 흐름</h2>
 짧은 표 OK (섹터명 / 1일% / 5일% / 20일% — 4컬럼).
@@ -405,8 +425,44 @@ def build_user_prompt(data: Dict) -> str:
     parts.append("\n## 6. 🔍 발굴 후보 (watchlist 밖 — 잘 안 알려진 종목)")
     parts.append(_format_screener(data.get("screener", {})))
 
-    parts.append("\n## 7. 뉴스 (확인용 — 비중 작게)")
+    parts.append("\n## 7. 뉴스 (일반 RSS + 종목별 + 세계 테마)")
+
+    parts.append("\n### 7-1. 일반 RSS 뉴스 (글로벌+한국)")
     parts.append(_format_news(data.get("news", [])))
+
+    # 한국 종목별 한국어 뉴스 — 노조·정치·사회 이슈
+    kr_stock_news = data.get("kr_stock_news", {})
+    if kr_stock_news:
+        parts.append("\n### 7-2. 🚨 한국 종목별 뉴스 (노조·정치·사회 이슈)")
+        parts.append("**종목 분석에 직접 반영해야 할 핵심.** 노조 파업, 정치 규제, 사회 이슈 등.")
+        for ticker, info in kr_stock_news.items():
+            parts.append(f"\n#### {info['name']} ({ticker})")
+            for art in info["articles"]:
+                parts.append(f"- [{art['source']}] {art['title']}")
+
+    # 미국 종목별 영어 뉴스
+    us_stock_news = data.get("us_stock_news", {})
+    if us_stock_news:
+        parts.append("\n### 7-3. 🇺🇸 미국 종목별 뉴스 (회사 이슈)")
+        for ticker, info in us_stock_news.items():
+            parts.append(f"\n#### {info['name']} ({ticker})")
+            for art in info["articles"]:
+                parts.append(f"- [{art['source']}] {art['title']}")
+
+    # 세계 테마/거시/지정학 뉴스 — 시장 전반에 영향
+    theme_news = data.get("theme_news", [])
+    if theme_news:
+        parts.append("\n### 7-4. 🌍 세계 거시·테마·지정학 (시장 전반 영향)")
+        parts.append("**이 흐름이 어떤 섹터/종목에 유리·불리한지 짚어내라.** 전쟁·제재·중국·Fed·AI·에너지 등.")
+        # 테마별로 묶기
+        by_theme = {}
+        for art in theme_news:
+            t = art.get("theme", "기타")
+            by_theme.setdefault(t, []).append(art)
+        for theme, articles in by_theme.items():
+            parts.append(f"\n#### [{theme}]")
+            for a in articles[:3]:
+                parts.append(f"- [{a['source']}] {a['title']}")
 
     # 메모리 주입 (지난 시그널 자기 검증용)
     current_prices = {
@@ -424,17 +480,31 @@ def build_user_prompt(data: Dict) -> str:
 
 **명심**:
 1. 독자는 주식 초보다. 중학생도 이해할 쉬운 말로. 어려운 용어는 괄호로 풀이.
-2. **첫 번째 섹션 "🎯 오늘 행동 가이드"**가 가장 중요. 이거만 봐도 오늘 뭘 하면 좋을지 알 수 있어야 한다.
-   거기에 매수 검토 후보, 비중 축소 검토, 관망, 절대 하지 말 것을 표 형식으로 명료하게.
-3. **두 번째 섹션 "💰 300만원 분산 시뮬레이션"** — 진짜 표로. 종목/티커/비중%/금액원/진입가/손절가/이유.
-   신호가 약하면 현금 비중을 키워라 (다 100% 채울 필요 없음).
-4. 임원 매매(SEC Form 4 / DART)가 있으면 그걸 강하게 다뤄라. "임원 N주 매수 — 보통 이런 신호는 ~~한 의미"
-5. 거시 → 섹터 → 종목 으로 인과관계 연결해라. "금리 ↑ 가능성 → 성장주 부담 → NVDA 매수 검토 보수적"
-6. 메모리에 과거 시그널이 있으면 거기서 자주 틀린 패턴을 의식해서 오늘은 더 보수적으로.
-7. "사세요/파세요" X. "매수 검토", "관망", "비중 축소 검토" 표현만 사용.
-8. 각 섹션 끝에 "**→ 그래서?**" 한 줄로 그 섹션이 의미하는 바를 정리.
+2. **300만원 분산 시뮬레이션에는 반드시 발굴 후보(소형주) 1~2개를 10~20% 비중으로 포함**. 대형주만 추천 X.
+   "추가 조사 필요" 라벨 + DART 링크 같이.
+3. **🔍 발굴 후보 섹션은 절대 빠뜨리지 말고 반드시 출력**. 한국 DART 후보가 있으면 stock-card discovery 형식으로 모두 카드화.
+4. **🚨 한국 종목별 한국어 뉴스 (#7-2)는 절대 무시하지 마라.**
+   - 노조 파업, 정치 이슈, 사회적 사건 등이 종목 가격에 직격 영향.
+   - 예: 삼성전자 노조 파업 → 생산 차질 → 단기 부정. 분석에 반드시 반영.
+   - 각 한국 종목 분석 카드의 "이유"에 관련 뉴스 핵심 한 줄 포함.
 
-특히 행동 가이드와 300만원 시뮬레이션을 자세하고 구체적으로. 데이터 나열보다 해석/의미가 중요.
+4-1. **🌍 세계 거시·지정학·테마 뉴스 (#7-4) 무겁게 반영.**
+   - Fed 금리, 중국 경기, 중동 분쟁, 미국 관세, AI/EV 산업 흐름 등.
+   - 이 흐름이 어떤 섹터/종목에 유리·불리한지 명확히 인과관계 짚어라.
+   - 예: "Fed 금리 인상 가능성 → 성장주 부담 → NVDA·테슬라 보수적 접근"
+   - 예: "중국 경기 부양 발표 → 한국 화학·철강 수혜 가능 → 포스코·LG화학 주목"
+   - 예: "중동 긴장 고조 → 유가 상승 → 정유주/방산주 수혜 가능"
+   - 예: "미 관세 인상 → 한국 수출주 부담 → 현대차·기아 주의"
+   - **각 거시/지정학 흐름이 본인 watchlist + 발굴 후보의 어느 종목에 어떻게 영향 미치는지 명시.**
+
+4-2. **미국 종목별 뉴스 (#7-3) — 미국 watchlist 종목 카드의 "이유"에 반영.**
+5. 임원 매매(SEC Form 4 / DART)가 있으면 강하게 다뤄라.
+6. 거시 → 섹터 → 종목 으로 인과관계 연결.
+7. 메모리에 과거 시그널이 있으면 자주 틀린 패턴 의식해서 오늘은 더 보수적으로.
+8. "사세요/파세요" X. "매수 검토", "관망", "비중 축소 검토" 표현만.
+9. 각 섹션 끝에 <div class="so-what">→ 그래서? ...</div> 로 정리.
+
+데이터 나열보다 해석/의미가 중요. 특히 사회 이슈(노조·정치·사건)가 종목에 미치는 영향을 짚어줘야 함.
 """)
 
     return "\n".join(parts)
@@ -488,12 +558,18 @@ def _format_top_movers(movers: Dict) -> str:
 
 
 def build_quick_user_prompt(data: Dict) -> str:
-    """단타 모드 — 빠른 데이터만."""
+    """단타 모드 — 빠른 데이터 + 아침 추천 포지션 평가."""
+    from position_tracker import format_positions_for_prompt
+
     parts = [f"# 데이터 수집 시각 (KST 기준): {data['collected_at']}\n"]
 
-    parts.append("## 1. 시장 지표 (지수/환율 등 현재값)")
+    # 🚨 0. 가장 중요 — 아침 추천 포지션 현재 상태
+    eval_positions = data.get("evaluated_positions", [])
+    parts.append(format_positions_for_prompt(eval_positions))
+
+    parts.append("\n## 1. 시장 지표 (지수/환율 등 현재값)")
     indicators = data.get("indicators", [])
-    for ind in indicators[:8]:  # 단타 모드는 핵심만
+    for ind in indicators[:8]:
         arrow = "▲" if ind["change_pct"] > 0 else ("▼" if ind["change_pct"] < 0 else "—")
         parts.append(
             f"- {ind['name']} ({ind['ticker']}): {ind['close']:,} {arrow} {ind['change_pct']:+.2f}%"
@@ -512,15 +588,18 @@ def build_quick_user_prompt(data: Dict) -> str:
     parts.append("""
 ---
 
-위 데이터로 시스템 프롬프트의 단타 모드 형식대로 빠른 브리핑을 HTML로 작성해.
+위 데이터로 단타 브리핑을 HTML로 작성해. 시스템 프롬프트의 단타 모드 형식 따라.
 
-**명심**:
-1. 단타 모드 — 짧고 빠르게. 5분 안에 읽을 수 있게.
-2. 거래량 폭증 + 상승 종목을 1순위로 강조 (가장 강한 단타 신호).
-3. 모든 카드에 data-ticker, data-recommended-at 속성 필수.
-4. 진입가/익절가/손절가는 단타 기준 (보통 ±2~3% 익절, -1.5~2.5% 손절).
-5. 추격매수 위험 종목은 분명히 경고.
-6. "사세요" X — "검토", "관망", "조심"만.
+**가장 중요**:
+1. **첫 섹션은 "📌 아침 추천 포지션 — 지금 상태"** — 위 0번 데이터의 각 종목별로:
+   - stock-card 형식, data-section="position-update"
+   - 추천 시 → 현재가 → 변동률 → 명확한 권고 (보유/매도 검토/손절 검토/익절 검토)
+   - 손절 도달/임박이면 빨간 카드(class="warning") 강하게 경고
+   - 익절 목표 도달이면 초록 카드 → "일부 매도 검토"
+2. **단타 후보** (그 다음 섹션) — 거래량 폭증 + 상승 종목 1~3개 carded
+3. 짧고 명확하게 — 5분 안에 읽을 수 있게
+4. 모든 카드에 data-ticker, data-recommended-at, data-target1, data-target2, data-stop 필수
+5. "사세요/파세요" 단정 X — "매도 검토", "보유", "손절 검토" 표현만
 """)
 
     return "\n".join(parts)
@@ -560,33 +639,47 @@ QUICK_SYSTEM_PROMPT = f"""너는 한국인 단타 트레이더(운용자금 약 
 - 손절 (-1.5~2.5% — 단타는 손절 빨리)
 - 시간 안에 이유 1줄 ("거래량 5배 + RSI 65 + 5분봉 돌파")
 
-# 출력 섹션 (단타 모드)
+# 출력 섹션 (단타 모드) — 반드시 이 순서
 
 <h2>⚡ 지금 (KST 시각) — 한 줄 정리</h2>
 <div class="tldr">
-시장 분위기 한 줄 + 지금 가장 핫한 종목 1~2개 + 조심할 점 1줄.
+시장 분위기 한 줄 + 아침 추천 종목 중 주의할 거 한 줄 + 지금 핫한 신규 종목 1줄.
 </div>
 
-<h2>🔥 지금 단타 후보 (Top 3~5)</h2>
-- stock-card candidate × 3~5개
-- 거래량 폭증 + 상승 종목 우선
-- 한국 + 미국 섞어서
+<h2>📌 아침 추천 포지션 — 지금 상태</h2>
+**가장 중요한 섹션.** 사용자가 아침에 추천대로 샀을지도 모르니까 매시간 어떻게 됐는지 점검.
+
+각 추천 종목마다 stock-card (data-section="position-update"):
+- data-ticker, data-recommended-at, data-target1, data-target2, data-stop 필수
+- 헤더에 종목명 + "📌 보유" / "✅ 1차 익절 도달" / "🚨 손절 도달" / "⚠️ 손절 임박" / "📉 단기 하락" 등 라벨
+- 추천 시 가격 vs 현재가 vs 변동률
+- 권고 한 줄:
+  - 손절 도달 → "**즉시 매도 검토**" (빨간 강조)
+  - 손절 임박 (-5~7%) → "**손절가 근접 — 매도 준비 검토**"
+  - 1차 익절 도달 (+8~10%) → "**일부 매도(50%) 검토 — 잔여 보유**"
+  - 2차 익절 도달 (+18~20%) → "**대부분 매도(80%+) 검토**"
+  - -3% 이내 약간 하락 → "**보유 유지, 다음 신호까지 관찰**"
+  - +3% 이내 약간 상승 → "**보유 유지, 1차 익절가 근접 시 액션**"
+- 카드 색깔: 손절 도달=warning(빨강), 익절 도달=discovery(초록), 보유=watch(노랑)
+
+만약 0번 데이터에 "(추적 중인 포지션 없음)"으로 떠 있으면 이 섹션 대신 짧게 "오늘 아침 풀 분석이 아직 안 돌아서 추적 데이터 없음" 한 줄.
+
+<h2>🔥 지금 단타 후보 (Top 1~3)</h2>
+- 거래량 폭증 + 상승 종목 우선. 한국 + 미국 섞어서 1~3개만.
+- stock-card candidate. 단타용 짧은 진입가/익절가/손절가 (±1~3%).
 
 <h2>🚀 장중 톱 무버</h2>
-한국·미국 각각 상승/하락 Top 5씩. 카드 또는 짧은 표(4컬럼 이내).
-
-<h2>📈 관심종목 — 지금 흐름</h2>
-watchlist 종목별로 stock-card watch 형식. 5분봉 흐름 + 1시간 변동.
+한국·미국 각각 상승/하락 Top 3씩. 카드 또는 짧은 표(4컬럼 이내).
 
 <h2>📰 최근 1시간 핵심 뉴스</h2>
-3~5줄.
+3줄 이내.
 
 <h2>⚠️ 조심할 것</h2>
-지금 추격매수 위험한 종목, 변동성 큰 이벤트 예고.
+1줄.
 
 # 짧고 빠르게
 
-풀 모드가 5,000자 정도면, 단타 모드는 **2,500자 이내로 짧게**. 오래 안 걸리게.
+풀 모드가 5,000자면, 단타 모드는 **2,000~3,000자**. 핵심은 "포지션 상태"임.
 """
 
 

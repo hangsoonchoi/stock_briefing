@@ -60,7 +60,8 @@ def main() -> int:
     from data_fetcher import fetch_all_data
     from intraday_fetcher import fetch_quick_data
 
-    data = safe_run("시장 데이터", fetch_all_data) or {
+    is_quick = (brief_mode == "quick")
+    data = safe_run("시장 데이터", fetch_all_data, quick=is_quick) or {
         "collected_at": datetime.now().isoformat(),
         "indicators": [], "sectors": [], "watchlist": [], "news": [],
     }
@@ -77,11 +78,19 @@ def main() -> int:
             "kr_candidates": [], "us_candidates": [], "scanned_days": 7,
         }
     else:
-        # 단타 모드: 빠른 데이터만 (가격/거래량/장중)
+        # 단타 모드: 빠른 데이터 + 아침 추천 포지션 평가
+        from position_tracker import evaluate_positions
+
         quick = safe_run("단타 데이터", fetch_quick_data) or {
             "intraday_watchlist": [], "top_movers": {},
         }
         data["intraday"] = quick
+
+        # 🚨 핵심: 아침에 추천된 포지션들 현재 상태 평가
+        evaluated = safe_run("포지션 평가", evaluate_positions) or []
+        data["evaluated_positions"] = evaluated
+        logger.info(f"  📌 추적 중인 아침 추천 포지션 {len(evaluated)}개")
+
         # 빈 자리 채움 (analyzer가 안전하게 작동하도록)
         data["macro"] = []
         data["filings"] = {"sec": {}, "dart": {}}
@@ -142,12 +151,13 @@ def main() -> int:
             logger.error(f"이메일 발송 실패: {e}")
             return 1
 
-    # 5. 메모리 저장
+    # 5. 메모리 저장 (모든 모드)
     try:
         import memory
         signals = memory.extract_signals_from_html(html_body)
         memory.save_today({
             "generated_at": datetime.now().isoformat(),
+            "mode": brief_mode,
             "signals": signals,
             "watchlist_snapshot": {
                 s["ticker"]: s["close"] for s in data.get("watchlist", [])
@@ -160,7 +170,20 @@ def main() -> int:
             },
         })
     except Exception as e:
-        logger.warning(f"메모리 저장 실패 (리포트는 발송됨): {e}")
+        logger.warning(f"메모리 저장 실패: {e}")
+
+    # 6. 풀 모드 한정 — 추천 포지션 추출/저장 (단타 모드가 매시간 추적할 데이터)
+    if brief_mode == "full":
+        try:
+            from position_tracker import extract_positions_from_html, save_today_positions
+            positions = extract_positions_from_html(html_body)
+            if positions:
+                save_today_positions(positions)
+                logger.info(f"📌 아침 추천 {len(positions)}개 포지션 저장 — 단타 모드가 추적 시작")
+            else:
+                logger.warning("HTML에서 포지션 추출 0개 — Claude 출력에 data 속성 누락 의심")
+        except Exception as e:
+            logger.warning(f"포지션 저장 실패: {e}")
 
     elapsed = (datetime.now() - start).total_seconds()
     logger.info(f"\n✅ 전체 완료 ({elapsed:.1f}초 소요)")

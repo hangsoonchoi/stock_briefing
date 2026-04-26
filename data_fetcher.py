@@ -207,19 +207,135 @@ def fetch_news() -> List[Dict]:
     return all_articles
 
 
-def fetch_all_data() -> Dict:
-    """모든 시장 데이터 수집."""
+def _gnews_search(query: str, hl: str = "en", gl: str = "US", limit: int = 6,
+                  hours_back: int = 72) -> List[Dict]:
+    """Google News RSS 검색 헬퍼. 출처 분리해서 정리."""
+    from urllib.parse import quote
+    cutoff = datetime.now() - timedelta(hours=hours_back)
+    # 검색어에 공백/한글 등 들어갈 수 있으니 URL 인코딩 필수
+    q_enc = quote(query)
+    url = f"https://news.google.com/rss/search?q={q_enc}&hl={hl}&gl={gl}&ceid={gl}:{hl}"
+    try:
+        feed = feedparser.parse(url)
+    except Exception as e:
+        logger.warning(f"GNews 실패 {query}: {e}")
+        return []
+
+    out = []
+    for entry in feed.entries[:limit * 2]:
+        published = entry.get("published_parsed") or entry.get("updated_parsed")
+        if published:
+            pub_dt = datetime(*published[:6])
+            if pub_dt < cutoff:
+                continue
+        title = (entry.get("title", "") or "").strip()
+        if not title:
+            continue
+        src = ""
+        if " - " in title:
+            parts = title.rsplit(" - ", 1)
+            title = parts[0].strip()
+            src = parts[1].strip()
+        out.append({
+            "title": title,
+            "source": src or "Google News",
+            "link": entry.get("link", ""),
+            "published": entry.get("published", ""),
+        })
+        if len(out) >= limit:
+            break
+    return out
+
+
+def fetch_korean_stock_news_per_ticker() -> Dict[str, Dict]:
+    """한국 watchlist 종목별 한국어 뉴스 (노동/정치/사회 이슈 포함)."""
+    results = {}
+    kr_stocks = WATCHLIST.get("한국", {})
+    for ticker, name in kr_stocks.items():
+        try:
+            articles = _gnews_search(name, hl="ko", gl="KR", limit=5, hours_back=72)
+            if articles:
+                results[ticker] = {"name": name, "articles": articles}
+        except Exception as e:
+            logger.warning(f"종목별 뉴스(KR) {name} 실패: {e}")
+        time.sleep(0.3)
+    return results
+
+
+def fetch_us_stock_news_per_ticker() -> Dict[str, Dict]:
+    """미국 watchlist 종목별 영어 뉴스."""
+    results = {}
+    us_stocks = WATCHLIST.get("미국", {})
+    for ticker, name in us_stocks.items():
+        try:
+            # 회사명으로 검색 (티커는 공통 단어 많음)
+            articles = _gnews_search(name, hl="en", gl="US", limit=5, hours_back=72)
+            if articles:
+                results[ticker] = {"name": name, "articles": articles}
+        except Exception as e:
+            logger.warning(f"종목별 뉴스(US) {name} 실패: {e}")
+        time.sleep(0.3)
+    return results
+
+
+def fetch_global_theme_news() -> List[Dict]:
+    """거시·테마·지정학 이슈 키워드 검색."""
+    try:
+        from config import GLOBAL_NEWS_QUERIES
+    except ImportError:
+        return []
+
+    out = []
+    for query, hl, gl in GLOBAL_NEWS_QUERIES:
+        try:
+            articles = _gnews_search(query, hl=hl, gl=gl, limit=3, hours_back=48)
+            for a in articles:
+                a["theme"] = query
+                out.append(a)
+        except Exception as e:
+            logger.warning(f"테마 뉴스 {query} 실패: {e}")
+        time.sleep(0.3)
+    return out
+
+
+def fetch_all_data(quick: bool = False) -> Dict:
+    """
+    모든 시장 데이터 수집.
+    quick=True: 단타 모드 — 빠른 핵심만 (15초 내). 종목별 뉴스/테마 뉴스 SKIP.
+    quick=False: 풀 모드 — 전부.
+    """
     logger.info("📊 시장 지표 수집 중...")
     indicators = fetch_market_indicators()
 
-    logger.info("🏭 섹터 로테이션 수집 중...")
-    sectors = fetch_sector_performance()
+    sectors = []
+    if not quick:
+        logger.info("🏭 섹터 로테이션 수집 중...")
+        sectors = fetch_sector_performance()
 
     logger.info("📈 관심 종목 + 기술지표 수집 중...")
     watchlist = fetch_watchlist_data()
 
-    logger.info("📰 뉴스 수집 중 (보조용)...")
+    logger.info("📰 일반 RSS 뉴스 수집 중...")
     news = fetch_news()
+
+    kr_stock_news = {}
+    us_stock_news = {}
+    theme_news = []
+
+    if not quick:
+        logger.info("🇰🇷 한국 종목별 뉴스 (노조·정치 이슈 포함)...")
+        kr_stock_news = fetch_korean_stock_news_per_ticker()
+        logger.info(f"  → {len(kr_stock_news)}종목 수집")
+
+        logger.info("🇺🇸 미국 종목별 뉴스...")
+        us_stock_news = fetch_us_stock_news_per_ticker()
+        logger.info(f"  → {len(us_stock_news)}종목 수집")
+
+        logger.info("🌍 세계 거시·테마 뉴스 (Fed, 중국, 지정학, AI, EV 등)...")
+        theme_news = fetch_global_theme_news()
+        logger.info(f"  → {len(theme_news)}건 수집")
+    else:
+        logger.info("⚡ 단타 모드: 종목별 뉴스/테마 뉴스 SKIP")
 
     return {
         "collected_at": datetime.now().isoformat(),
@@ -227,6 +343,9 @@ def fetch_all_data() -> Dict:
         "sectors": sectors,
         "watchlist": watchlist,
         "news": news,
+        "kr_stock_news": kr_stock_news,
+        "us_stock_news": us_stock_news,
+        "theme_news": theme_news,
     }
 
 
