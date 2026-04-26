@@ -19,8 +19,56 @@ from typing import List, Tuple
 from utils import logger
 
 
+import re as _re
 DOCS_DIR = Path(__file__).parent / "docs"
 DOCS_DIR.mkdir(exist_ok=True)
+
+
+def _sanitize_html(html: str) -> str:
+    """
+    Claude가 생성한 HTML에서 위험한 인라인 스타일 제거 + 깨진 태그 정규화.
+    - 어두운 배경/색 인라인 제거 (글씨 안 보이게 되는 거 방지)
+    - float/position/transform 제거 (레이아웃 망가지는 거 방지)
+    - BeautifulSoup으로 닫히지 않은 태그 자동 닫기
+    """
+    # 1. 위험한 인라인 스타일 속성 제거
+    DANGEROUS_PROPS = [
+        "background", "background-color", "background-image",
+        "color",
+        "float", "clear",
+        "position", "top", "right", "bottom", "left",
+        "transform",
+        "display", "flex-direction",
+        "width", "height",
+        "z-index",
+    ]
+    danger_pattern = "|".join(DANGEROUS_PROPS)
+
+    def _strip(m):
+        style_content = m.group(1)
+        cleaned = _re.sub(
+            rf"(\b({danger_pattern})\s*:[^;]+;?)",
+            "",
+            style_content,
+            flags=_re.IGNORECASE,
+        )
+        cleaned = cleaned.strip().rstrip(";").strip()
+        if not cleaned:
+            return ""
+        return f'style="{cleaned}"'
+
+    html = _re.sub(r'style\s*=\s*"([^"]*)"', _strip, html)
+
+    # 2. BeautifulSoup으로 깨진 태그 닫기 (float right 같은 거 방지)
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "html.parser")
+        # 원래 다 자식이 body 없이 그냥 fragment로 들어옴
+        html = str(soup)
+    except Exception as e:
+        logger.warning(f"HTML BeautifulSoup 정규화 실패: {e}")
+
+    return html
 
 
 PAGE_TEMPLATE = """<!DOCTYPE html>
@@ -31,18 +79,20 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<meta name="color-scheme" content="light">
 <title>{title}</title>
 <style>
   * {{ box-sizing: border-box; }}
+  html {{ color-scheme: light !important; background: #fafafa !important; }}
   body {{
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
                  "맑은 고딕", "Malgun Gothic", sans-serif;
     line-height: 1.65;
-    color: #2c3e50;
+    color: #2c3e50 !important;
     max-width: 960px;
     margin: 0 auto;
     padding: 16px;
-    background: #fafafa;
+    background: #fafafa !important;
     font-size: 16px;
   }}
   .nav {{
@@ -74,17 +124,20 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   .header h1 {{ margin: 0 0 8px 0; font-size: 24px; }}
   .header .date {{ opacity: 0.85; font-size: 14px; }}
   .content {{
-    background: white;
+    background: #ffffff !important;
+    color: #1a2332 !important;
     padding: 28px 32px;
     border-radius: 0 0 12px 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }}
+  .content * {{ color: #1a2332; }}
   .content h2 {{
     border-bottom: 2px solid #ecf0f1;
     padding-bottom: 10px;
     margin-top: 32px;
     font-size: 20px;
-    color: #1a2332;
+    color: #1a2332 !important;
+    background: transparent !important;
   }}
   .content h2:first-child {{ margin-top: 0; }}
   .content h3 {{ font-size: 17px; margin-top: 20px; }}
@@ -133,19 +186,42 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   /* 마지막 열(이유)은 더 넓게 */
   .content td:last-child {{ min-width: 220px !important; }}
 
-  /* 종목 카드 (매수 검토 후보, 300만원 시뮬레이션 등) */
-  .stock-card {{
-    border: 1px solid #e0e6ed;
-    border-radius: 10px;
-    padding: 16px 18px;
-    margin: 14px 0;
-    background: #fff;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  /* 종목 카드 — 배경/글씨 색 무조건 라이트 강제 */
+  /* [style*="background"] 같은 인라인 스타일도 덮어쓰도록 강력 강제 */
+  .stock-card,
+  .stock-card[style] {{
+    border: 1px solid #e0e6ed !important;
+    border-radius: 10px !important;
+    padding: 16px 18px !important;
+    margin: 14px 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #1a2332 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
   }}
-  .stock-card.candidate {{ border-left: 4px solid #c0392b; }}
-  .stock-card.watch {{ border-left: 4px solid #f39c12; background: #fff9ec; }}
-  .stock-card.discovery {{ border-left: 4px solid #27ae60; background: #f3faf5; }}
-  .stock-card.warning {{ border-left: 4px solid #e74c3c; background: #fff5f5; }}
+  /* 카드 안 모든 자식들도 어두운 배경 박는 인라인 스타일 무력화 */
+  .stock-card *[style*="background"] {{
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }}
+  .stock-card.candidate {{
+    border-left: 4px solid #c0392b;
+    background: #ffffff !important;
+  }}
+  .stock-card.watch {{
+    border-left: 4px solid #f39c12;
+    background: #fffbf0 !important;
+  }}
+  .stock-card.discovery {{
+    border-left: 4px solid #27ae60;
+    background: #f5fbf7 !important;
+  }}
+  .stock-card.warning {{
+    border-left: 4px solid #e74c3c;
+    background: #fff7f5 !important;
+  }}
 
   /* TOP 3 우선순위 카드 — 금/은/동 강조 */
   .stock-card.priority-1 {{
@@ -219,26 +295,43 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   .stock-card.priority-2 .stock-header .stock-allocation {{ background: #566573 !important; }}
   .stock-card.priority-3 .stock-header .stock-allocation {{ background: #935116 !important; }}
 
-  /* 카드 본문 글씨는 항상 어두운 색 (밝은 카드 배경에 어두운 글씨) */
+  /* 카드 본문 글씨 — 무조건 진한 검정 (라이트 배경에 명확하게 보이도록) */
   .stock-card,
+  .stock-card *:not(.stock-allocation):not(.stock-allocation *):not(.up):not(.down):not(.live-price-row .label):not(.stock-prices .label):not(.stock-reason) {{
+    color: #1a2332 !important;
+  }}
   .stock-card p,
   .stock-card li,
-  .stock-card div:not(.stock-allocation) {{
-    color: #2c3e50;
+  .stock-card span:not(.stock-allocation):not(.stock-allocation *):not(.up):not(.down) {{
+    color: #1a2332 !important;
   }}
   .stock-card .stock-name,
   .stock-card h3 {{
     color: #1a2332 !important;
+    font-weight: 700;
+  }}
+  /* 라벨(작은 회색 글씨)는 약간 흐리게 */
+  .stock-card .label {{ color: #5d6d7e !important; }}
+  /* stock-reason은 살짝 다른 톤 */
+  .stock-card .stock-reason {{
+    color: #2c3e50 !important;
+    background: #f8f9fb;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-top: 10px;
+    line-height: 1.65;
   }}
   /* 가격 — 빨강(상승) / 파랑(하락) 강조 */
   .stock-card .value.up,
-  .stock-card .price-diff.up {{ color: #c0392b !important; }}
+  .stock-card .price-diff.up,
+  .stock-card .up {{ color: #c0392b !important; font-weight: 700; }}
   .stock-card .value.down,
-  .stock-card .price-diff.down {{ color: #1f618d !important; }}
+  .stock-card .price-diff.down,
+  .stock-card .down {{ color: #1f618d !important; font-weight: 700; }}
   /* 일반 가격 숫자 */
   .stock-card .value,
   .stock-card .rec-price,
-  .stock-card .current-price {{ color: #1a2332 !important; }}
+  .stock-card .current-price {{ color: #1a2332 !important; font-weight: 700; }}
 
   .stock-prices {{
     display: grid;
@@ -619,6 +712,9 @@ def publish(html_body: str, dry_run: bool = False) -> Path:
     시간 스탬프 HTML 페이지 작성 + latest.html + index.html 갱신.
     매시간 실행해도 덮어쓰지 않고 비교 가능하게 별도 파일.
     """
+    # Claude HTML에서 어두운 배경 인라인 스타일 제거
+    html_body = _sanitize_html(html_body)
+
     now = datetime.now()
     timestamp = now.strftime("%Y-%m-%d-%H%M")  # 예: 2026-04-26-1430
     date_kor = now.strftime("%Y년 %m월 %d일 (%a) %H:%M KST")
