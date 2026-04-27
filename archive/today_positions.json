@@ -1,5 +1,5 @@
 {
-  "saved_at": "2026-04-27T00:15:00.558845",
+  "saved_at": "2026-04-27T07:49:45.489912",
   "date": "2026-04-27",
   "positions": [
     {
@@ -7,8 +7,8 @@
       "name": "SK하이닉스000660.KS · KOSPI",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "🚫 추격매수 금지",
-      "recommended_at": 1222000.0,
+      "allocation": "⚠️ 추격매수 금지",
+      "recommended_at": 1290000.0,
       "target_1": 1300000.0,
       "target_2": 1400000.0,
       "stop_loss": 1100000.0
@@ -18,7 +18,73 @@
       "name": "NVIDIANVDA · NASDAQ",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "🚫 추격매수 금지",
+      "allocation": "⚠️ 추격매수 금지",
+      "recommended_at": 208.19,
+      "target_1": 220.0,
+      "target_2": 235.0,
+      "stop_loss": 188.0
+    },
+    {
+      "ticker": "005930.KS",
+      "name": "삼성전자 (어닝 D-2 추격매수 금지)005930.KS · KOSPI",
+      "section": "avoid",
+      "card_type": "warning",
+      "allocation": "⚠️ 신규 추격 금지 (기존 보유는 유지)",
+      "recommended_at": 224500.0,
+      "target_1": 229000.0,
+      "target_2": 240000.0,
+      "stop_loss": 205000.0
+    },
+    {
+      "ticker": "012450.KS",
+      "name": "🥇 한화에어로스페이스012450.KS · KOSPI",
+      "section": "top-priority",
+      "card_type": "candidate",
+      "allocation": "20% · 600,000원 | 기간: 2~4주 | 위험: 중",
+      "recommended_at": 95000.0,
+      "target_1": 105000.0,
+      "target_2": 120000.0,
+      "stop_loss": 84000.0
+    },
+    {
+      "ticker": "452430.KS",
+      "name": "🥈 사피엔반도체452430.KS · KOSDAQ",
+      "section": "top-priority",
+      "card_type": "candidate",
+      "allocation": "15% · 450,000원 | 기간: 1~2주 | 위험: 중상",
+      "recommended_at": 0.0,
+      "target_1": 0.0,
+      "target_2": 0.0,
+      "stop_loss": 0.0
+    },
+    {
+      "ticker": "079190.KS",
+      "name": "🥉 케스피온079190.KQ · KOSDAQ",
+      "section": "top-priority",
+      "card_type": "candidate",
+      "allocation": "10% · 300,000원 | 기간: 1~2주 | 위험: 높음 ⚠️ 추가 조사 필요",
+      "recommended_at": 0.0,
+      "target_1": 0.0,
+      "target_2": 0.0,
+      "stop_loss": 0.0
+    },
+    {
+      "ticker": "000660.KS",
+      "name": "✅ 1차 익절 임박 — SK하이닉스000660.KS · KOSPI",
+      "section": "positions",
+      "card_type": "candidate",
+      "allocation": "1차 익절가 130만원 근접",
+      "recommended_at": 1222000.0,
+      "target_1": 1300000.0,
+      "target_2": 1400000.0,
+      "stop_loss": 1100000.0
+    },
+    {
+      "ticker": "NVDA",
+      "name": "📌 보유 — NVIDIANVDA · NASDAQ",
+      "section": "positions",
+      "card_type": "candidate",
+      "allocation": "보유 유지 (신규 추격 금지)",
       "recommended_at": 208.27,
       "target_1": 220.0,
       "target_2": 235.0,
@@ -26,47 +92,14 @@
     },
     {
       "ticker": "373220.KS",
-      "name": "LG에너지솔루션373220.KS · KOSPI",
-      "section": "avoid",
+      "name": "⚠️ 하락 중 주의 — LG에너지솔루션373220.KS · KOSPI",
+      "section": "positions",
       "card_type": "warning",
-      "allocation": "🚫 지금은 추격매수 위험",
+      "allocation": "손절가(44만원)까지 여유 있음",
       "recommended_at": 481000.0,
       "target_1": 510000.0,
       "target_2": 527000.0,
       "stop_loss": 440000.0
-    },
-    {
-      "ticker": "005930.KS",
-      "name": "🥇 삼성전자005930.KS · KOSPI",
-      "section": "top-priority",
-      "card_type": "candidate",
-      "allocation": "30% · 900,000원",
-      "recommended_at": 219500.0,
-      "target_1": 229000.0,
-      "target_2": 240000.0,
-      "stop_loss": 205000.0
-    },
-    {
-      "ticker": "112610.KS",
-      "name": "🥈 씨에스윈드112610.KS · KOSPI",
-      "section": "top-priority",
-      "card_type": "candidate",
-      "allocation": "25% · 750,000원",
-      "recommended_at": 0.0,
-      "target_1": 0.0,
-      "target_2": 0.0,
-      "stop_loss": 0.0
-    },
-    {
-      "ticker": "044450.KS",
-      "name": "🥉 KSS해운044450.KS · KOSPI⚠️ 추가 조사 필요",
-      "section": "top-priority",
-      "card_type": "candidate",
-      "allocation": "15% · 450,000원",
-      "recommended_at": 0.0,
-      "target_1": 0.0,
-      "target_2": 0.0,
-      "stop_loss": 0.0
     }
   ]
 }
