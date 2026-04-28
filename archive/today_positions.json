@@ -1,83 +1,17 @@
 {
-  "saved_at": "2026-04-28T20:50:28.937738",
+  "saved_at": "2026-04-28T23:41:25.321968",
   "date": "2026-04-28",
   "positions": [
     {
-      "ticker": "112610.KS",
-      "name": "씨에스윈드112610.KS · KOSPI",
-      "section": "holdings",
-      "card_type": "candidate",
-      "allocation": "📌 보유 중 — 4주 · 투자금 294,400원",
-      "recommended_at": 73600.0,
-      "target_1": 79500.0,
-      "target_2": 88300.0,
-      "stop_loss": 68500.0
-    },
-    {
-      "ticker": "022100.KQ",
-      "name": "포스코DX022100.KQ · KOSDAQ",
-      "section": "holdings",
-      "card_type": "candidate",
-      "allocation": "⚠️ 데이터 없음 — 3주 · 매입가 40,812원",
-      "recommended_at": 40812.0,
-      "target_1": 44100.0,
-      "target_2": 49000.0,
-      "stop_loss": 37950.0
-    },
-    {
-      "ticker": "373220.KS",
-      "name": "LG에너지솔루션373220.KS · KOSPI",
-      "section": "holdings",
-      "card_type": "candidate",
-      "allocation": "📌 보유 중 — 3주 · 투자금 1,435,500원",
-      "recommended_at": 478500.0,
-      "target_1": 516800.0,
-      "target_2": 574200.0,
-      "stop_loss": 444900.0
-    },
-    {
-      "ticker": "000660.KS",
-      "name": "SK하이닉스000660.KS · KOSPI",
-      "section": "avoid",
-      "card_type": "warning",
-      "allocation": "🚫 BUY 완전 차단",
-      "recommended_at": null,
-      "target_1": null,
-      "target_2": null,
-      "stop_loss": null
-    },
-    {
-      "ticker": "NVDA",
-      "name": "NVIDIANVDA · NASDAQ",
-      "section": "avoid",
-      "card_type": "warning",
-      "allocation": "🚫 BUY 완전 차단",
-      "recommended_at": null,
-      "target_1": null,
-      "target_2": null,
-      "stop_loss": null
-    },
-    {
-      "ticker": "005930.KS",
-      "name": "삼성전자005930.KS · KOSPI",
-      "section": "avoid",
-      "card_type": "warning",
-      "allocation": "🚫 BUY 차단 — 어닝 D-1 (내일 발표)",
-      "recommended_at": null,
-      "target_1": null,
-      "target_2": null,
-      "stop_loss": null
-    },
-    {
-      "ticker": "TSLA",
-      "name": "🥇 TeslaTSLA · NASDAQ · 1순위",
+      "ticker": "198940.KS",
+      "name": "🥇 1순위 — 한주라이트메탈198940.KS · KOSPI · 발굴 후보",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "10~15% · 300,000~450,000원 분산",
-      "recommended_at": 378.67,
-      "target_1": 410.0,
-      "target_2": 450.0,
-      "stop_loss": 355.0
+      "allocation": "15% · 450,000원 · 추가 조사 필요",
+      "recommended_at": 0.0,
+      "target_1": 0.0,
+      "target_2": 0.0,
+      "stop_loss": 0.0
     }
   ]
 }
