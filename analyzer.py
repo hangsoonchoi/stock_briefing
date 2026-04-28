@@ -23,6 +23,12 @@ from config import (
 )
 from utils import logger
 import memory
+from filters import (
+    annotate_buy_blocks,
+    filter_discovery_candidates,
+    get_accuracy_mode,
+    build_filter_summary,
+)
 
 
 SYSTEM_PROMPT = f"""너는 한국인 개인 투자자(운용자금 약 {TOTAL_CAPITAL_KRW:,}원, 다 잃어도 됨)를
@@ -378,7 +384,10 @@ def _format_watchlist(watchlist: List[Dict]) -> str:
         return "(관심 종목 데이터 없음)"
     parts = []
     for s in watchlist:
-        parts.append(f"\n### [{s['market']}] {s['name']} ({s['ticker']})")
+        # 🚫 BUY 차단 라벨 — 종목명 옆에 즉시 보이게 헤더에 박음
+        block = s.get("_buy_block_reason")
+        block_marker = f" **🚫 BUY 차단 — {block}**" if block else ""
+        parts.append(f"\n### [{s['market']}] {s['name']} ({s['ticker']}){block_marker}")
         parts.append(
             f"- 종가 {s['close']:,} ({s['change_pct']:+.2f}%) / "
             f"거래량 {s['volume']:,} (평균 대비 {s['vol_vs_avg']}x) / "
@@ -573,6 +582,28 @@ def _format_screener(screener: Dict) -> str:
 def build_user_prompt(data: Dict) -> str:
     from position_tracker import format_positions_for_prompt, format_user_holdings_for_prompt
     parts = [f"# 데이터 수집 시각 (KST): {data['collected_at']}\n"]
+
+    # 🛡️ 추천 안전 필터 — Claude 보기 전에 단기 고점 추격 위험 종목 자동 차단
+    # (RSI 70+, 52주 90%+, 거래량3배+가격+10%, 어닝 D-3 이내 → 매수 추천 강제 금지)
+    watchlist = data.get("watchlist", [])
+    block_stats = annotate_buy_blocks(watchlist)
+    accuracy_mode = get_accuracy_mode(data.get("accuracy_report"))
+    filter_summary = build_filter_summary(block_stats, accuracy_mode)
+    parts.append(filter_summary)
+    logger.info(
+        f"🛡️ 필터: {block_stats['total']}개 중 {block_stats['blocked']}개 BUY 차단 / "
+        f"매수 가능 {block_stats['buy_eligible']}개 / 적중률모드 {accuracy_mode}"
+    )
+
+    # 발굴 후보도 필터 적용 — 차단된 건 별도 표시
+    screener = data.get("screener", {}) or {}
+    for key in ("kr_candidates", "us_candidates"):
+        if key in screener and isinstance(screener[key], list):
+            passed, blocked = filter_discovery_candidates(screener[key])
+            screener[key] = passed
+            if blocked:
+                screener.setdefault("_blocked", {})[key] = blocked
+    data["screener"] = screener
 
     # 🎯 0-1. 가장 중요 — 사용자가 실제 매수한 종목 (user_holdings.json)
     user_holdings = data.get("user_holdings", [])

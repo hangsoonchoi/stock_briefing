@@ -264,18 +264,39 @@ def main() -> int:
     except Exception as e:
         logger.warning(f"메모리 저장 실패: {e}")
 
-    # 6. 풀 모드 한정 — 추천 포지션 추출/저장 (단타 모드가 매시간 추적할 데이터)
-    if brief_mode == "full":
-        try:
-            from position_tracker import extract_positions_from_html, save_today_positions
-            positions = extract_positions_from_html(html_body)
-            if positions:
+    # 6. 추천 포지션 추출 + 누적 로그 (모든 run 마다)
+    try:
+        from position_tracker import extract_positions_from_html, save_today_positions
+        from performance_tracker import log_recommendations_batch
+        positions = extract_positions_from_html(html_body)
+        if positions:
+            if brief_mode == "full":
                 save_today_positions(positions)
-                logger.info(f"📌 아침 추천 {len(positions)}개 포지션 저장 — 단타 모드가 추적 시작")
-            else:
-                logger.warning("HTML에서 포지션 추출 0개 — Claude 출력에 data 속성 누락 의심")
-        except Exception as e:
-            logger.warning(f"포지션 저장 실패: {e}")
+                logger.info(f"📌 아침 추천 {len(positions)}개 포지션 저장")
+
+            # 모든 run 에서 추천 로그 누적 (패턴 학습용)
+            wl_meta = {
+                s["ticker"]: {
+                    "rsi": (s.get("technicals") or {}).get("rsi"),
+                    "year_position": s.get("year_position"),
+                    "news_count": s.get("_news_count"),
+                    "reddit_score": s.get("_reddit_score"),
+                    "market_cap": (s.get("fundamentals") or {}).get("market_cap"),
+                    "sector": (s.get("fundamentals") or {}).get("sector"),
+                    "change_pct": s.get("change_pct"),
+                    "vol_vs_avg": s.get("vol_vs_avg"),
+                }
+                for s in data.get("watchlist", [])
+            }
+            for p in positions:
+                meta = wl_meta.get(p.get("ticker"))
+                if meta:
+                    p.update(meta)
+            log_recommendations_batch(positions)
+        else:
+            logger.warning("HTML에서 포지션 추출 0개 — Claude 출력에 data 속성 누락 의심")
+    except Exception as e:
+        logger.warning(f"포지션 저장 실패: {e}")
 
     elapsed = (datetime.now(KST) - start).total_seconds()
     logger.info(f"\n✅ 전체 완료 ({elapsed:.1f}초 소요)")
