@@ -1,5 +1,5 @@
 {
-  "saved_at": "2026-04-28T07:47:36.680500",
+  "saved_at": "2026-04-28T08:02:45.764699",
   "date": "2026-04-28",
   "positions": [
     {
@@ -7,8 +7,8 @@
       "name": "SK하이닉스000660.KS · KOSPI",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "⛔ 오늘 신규 매수 금지",
-      "recommended_at": 1300000.0,
+      "allocation": "⚠️ 신규 추격매수 금지",
+      "recommended_at": 1306000.0,
       "target_1": 1380000.0,
       "target_2": 1450000.0,
       "stop_loss": 1200000.0
@@ -18,55 +18,88 @@
       "name": "NVIDIANVDA · 나스닥",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "⛔ 오늘 신규 매수 금지",
-      "recommended_at": 216.61,
+      "allocation": "⚠️ 신규 추격매수 금지",
+      "recommended_at": 216.63,
       "target_1": 230.0,
       "target_2": 250.0,
       "stop_loss": 195.0
     },
     {
       "ticker": "005380.KS",
-      "name": "현대자동차005380.KS · KOSPI",
+      "name": "현대자동차 (단기 추격매수 주의)005380.KS · KOSPI",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "⛔ 오늘 추격매수 금지",
+      "allocation": "⚠️ 오늘 신규 진입 금지",
       "recommended_at": 557000.0,
       "target_1": 590000.0,
       "target_2": 620000.0,
       "stop_loss": 520000.0
     },
     {
-      "ticker": "005930.KS",
-      "name": "🥇 삼성전자005930.KS · KOSPI",
+      "ticker": "452430.KS",
+      "name": "🥇 사피엔반도체452430.KS · KOSDAQ",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "35% · 1,050,000원",
+      "allocation": "10% · 300,000원 | ⚠️ 추가 조사 필요",
+      "recommended_at": 0.0,
+      "target_1": 0.0,
+      "target_2": 0.0,
+      "stop_loss": 0.0
+    },
+    {
+      "ticker": "005930.KS",
+      "name": "🥈 삼성전자005930.KS · KOSPI",
+      "section": "top-priority",
+      "card_type": "candidate",
+      "allocation": "20% · 600,000원 | 기존 보유자 추가 검토",
       "recommended_at": 221000.0,
       "target_1": 235000.0,
       "target_2": 250000.0,
       "stop_loss": 208000.0
     },
     {
-      "ticker": "SKC",
-      "name": "🥈 SKC011790.KS · KOSPI",
+      "ticker": "011790.KS",
+      "name": "🥉 SKC011790.KS · KOSPI",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "30% · 900,000원",
+      "allocation": "10% · 300,000원 | ⚠️ 추가 조사 필요",
       "recommended_at": 0.0,
       "target_1": 0.0,
       "target_2": 0.0,
       "stop_loss": 0.0
     },
     {
-      "ticker": "452430.KQ",
-      "name": "🥉 사피엔반도체452430.KQ · KOSDAQ",
-      "section": "top-priority",
+      "ticker": "005930.KS",
+      "name": "🥇 삼성전자005930.KS · KOSPI",
+      "section": "positions",
       "card_type": "candidate",
-      "allocation": "20% · 600,000원⚠️ 추가 조사 필요",
-      "recommended_at": 0.0,
-      "target_1": 0.0,
-      "target_2": 0.0,
-      "stop_loss": 0.0
+      "allocation": "📌 보유 중 (+0.90%)",
+      "recommended_at": 221000.0,
+      "target_1": 235000.0,
+      "target_2": 250000.0,
+      "stop_loss": 208000.0
+    },
+    {
+      "ticker": "000660.KS",
+      "name": "SK하이닉스000660.KS · KOSPI",
+      "section": "positions",
+      "card_type": "warning",
+      "allocation": "✅ 1차 익절 목표 접근 중 (+0.46%)",
+      "recommended_at": 1300000.0,
+      "target_1": 1380000.0,
+      "target_2": 1450000.0,
+      "stop_loss": 1200000.0
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIANVDA · 나스닥",
+      "section": "positions",
+      "card_type": "candidate",
+      "allocation": "📌 보유 중 (+0.01%)",
+      "recommended_at": 216.61,
+      "target_1": 230.0,
+      "target_2": 250.0,
+      "stop_loss": 195.0
     }
   ]
 }
