@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="color-scheme" content="light">
+<title>시장 브리핑 — 2026-04-27-0015</title>
+<style>
+  * { box-sizing: border-box; }
+  html { color-scheme: light !important; background: #fafafa !important; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+                 "맑은 고딕", "Malgun Gothic", sans-serif;
+    line-height: 1.65;
+    color: #2c3e50 !important;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 16px;
+    background: #fafafa !important;
+    font-size: 16px;
+  }
+  .nav {
+    background: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .nav a {
+    color: #2980b9;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: #ecf0f1;
+  }
+  .nav a:hover { background: #d5dde0; }
+  .header {
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 12px 12px 0 0;
+  }
+  .header h1 { margin: 0 0 8px 0; font-size: 24px; }
+  .header .date { opacity: 0.85; font-size: 14px; }
+  .content {
+    background: #ffffff !important;
+    color: #1a2332 !important;
+    padding: 28px 32px;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  /* 본문 내 모든 요소 — float/position/width 금지 (레이아웃 망가지는 거 차단) */
+  .content > *,
+  .content section,
+  .content article,
+  .content > div {
+    float: none !important;
+    clear: both !important;
+    position: static !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  /* 모든 텍스트 진한 검정 강제 (Claude 인라인 흰 글씨 무력화) */
+  .content *:not(.stock-allocation):not(.stock-allocation *):not(.up):not(.down):not(.value.up):not(.value.down):not(.price-diff.up):not(.price-diff.down) {
+    color: #1a2332 !important;
+  }
+  .content .up,
+  .content .value.up,
+  .content .price-diff.up { color: #c0392b !important; }
+  .content .down,
+  .content .value.down,
+  .content .price-diff.down { color: #1f618d !important; }
+  /* 배지는 흰글씨 유지 (위에 별도 규칙 있음) */
+  .content h2 {
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 10px;
+    margin-top: 32px;
+    font-size: 20px;
+    color: #1a2332 !important;
+    background: transparent !important;
+  }
+  .content h2:first-child { margin-top: 0; }
+  .content h3 { font-size: 17px; margin-top: 20px; }
+  .content p, .content li { font-size: 15px; }
+
+  /* 표 — 한글 자연 줄바꿈 강제 + 헤더 진한색 강제 (Claude 인라인 스타일 덮어쓰기) */
+  .content table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 14px 0 !important;
+    font-size: 14px !important;
+  }
+  .content table > thead,
+  .content table > tbody,
+  .content table > tfoot {
+    display: table !important;
+    width: 100% !important;
+    min-width: 640px !important;
+    border-collapse: collapse !important;
+  }
+  .content table tr { display: table-row !important; }
+  .content th, .content td {
+    display: table-cell !important;
+    padding: 10px 14px !important;
+    border-bottom: 1px solid #ecf0f1 !important;
+    text-align: left !important;
+    vertical-align: top !important;
+    word-break: keep-all !important;
+    word-wrap: break-word !important;
+    white-space: normal !important;
+    line-height: 1.6 !important;
+    min-width: 90px !important;
+    background: transparent !important;
+    color: #2c3e50 !important;
+  }
+  .content th {
+    background: #2c3e50 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    border-bottom: 2px solid #c0392b !important;
+  }
+  /* 마지막 열(이유)은 더 넓게 */
+  .content td:last-child { min-width: 220px !important; }
+
+  /* 종목 카드 — 배경/글씨 색 무조건 라이트 강제 */
+  /* [style*="background"] 같은 인라인 스타일도 덮어쓰도록 강력 강제 */
+  .stock-card,
+  .stock-card[style] {
+    border: 1px solid #e0e6ed !important;
+    border-radius: 10px !important;
+    padding: 16px 18px !important;
+    margin: 14px 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #1a2332 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+  }
+  /* 카드 안 모든 자식들도 어두운 배경 박는 인라인 스타일 무력화 */
+  .stock-card *[style*="background"] {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+  .stock-card.candidate {
+    border-left: 4px solid #c0392b;
+    background: #ffffff !important;
+  }
+  .stock-card.watch {
+    border-left: 4px solid #f39c12;
+    background: #fffbf0 !important;
+  }
+  .stock-card.discovery {
+    border-left: 4px solid #27ae60;
+    background: #f5fbf7 !important;
+  }
+  .stock-card.warning {
+    border-left: 4px solid #e74c3c;
+    background: #fff7f5 !important;
+  }
+
+  /* TOP 3 우선순위 카드 — 금/은/동 강조 */
+  .stock-card.priority-1 {
+    border-left: 6px solid #f39c12;
+    background: linear-gradient(90deg, #fffaf0 0%, #fff 30%);
+    box-shadow: 0 2px 8px rgba(243,156,18,0.2);
+    padding: 20px 24px;
+  }
+  .stock-card.priority-1 .stock-header h3 { font-size: 19px; }
+  .stock-card.priority-1 .stock-header h3::before {
+    content: "🥇 ";
+    margin-right: 4px;
+  }
+  .stock-card.priority-2 {
+    border-left: 5px solid #95a5a6;
+    background: linear-gradient(90deg, #fafbfc 0%, #fff 30%);
+    padding: 18px 22px;
+  }
+  .stock-card.priority-2 .stock-header h3::before {
+    content: "🥈 ";
+    margin-right: 4px;
+  }
+  .stock-card.priority-3 {
+    border-left: 5px solid #b87333;
+    background: linear-gradient(90deg, #fcf8f3 0%, #fff 30%);
+    padding: 18px 22px;
+  }
+  .stock-card.priority-3 .stock-header h3::before {
+    content: "🥉 ";
+    margin-right: 4px;
+  }
+
+  .stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px dashed #e0e6ed;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  .stock-header h3, .stock-header .stock-name {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a2332;
+  }
+  /* 우상단 배지 — 무조건 어두운 배경 + 흰 글씨 (Claude 인라인 스타일 덮어쓰기) */
+  .stock-card .stock-allocation,
+  .stock-card .stock-header .stock-allocation,
+  .stock-card .stock-allocation * {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+  }
+  .stock-header .stock-allocation {
+    font-size: 13px !important;
+    background: #2c3e50 !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+  }
+  /* 카드 종류별 배지 색 — 모두 어두운 톤으로 흰 글씨 잘 보임 */
+  .stock-card.candidate .stock-header .stock-allocation { background: #c0392b !important; }
+  .stock-card.discovery .stock-header .stock-allocation { background: #1e8449 !important; }
+  .stock-card.watch .stock-header .stock-allocation { background: #b9770e !important; }
+  .stock-card.warning .stock-header .stock-allocation { background: #922b21 !important; }
+  .stock-card.priority-1 .stock-header .stock-allocation { background: #b7950b !important; }
+  .stock-card.priority-2 .stock-header .stock-allocation { background: #566573 !important; }
+  .stock-card.priority-3 .stock-header .stock-allocation { background: #935116 !important; }
+
+  /* 카드 본문 글씨 — 무조건 진한 검정 (라이트 배경에 명확하게 보이도록) */
+  .stock-card,
+  .stock-card *:not(.stock-allocation):not(.stock-allocation *):not(.up):not(.down):not(.live-price-row .label):not(.stock-prices .label):not(.stock-reason) {
+    color: #1a2332 !important;
+  }
+  .stock-card p,
+  .stock-card li,
+  .stock-card span:not(.stock-allocation):not(.stock-allocation *):not(.up):not(.down) {
+    color: #1a2332 !important;
+  }
+  .stock-card .stock-name,
+  .stock-card h3 {
+    color: #1a2332 !important;
+    font-weight: 700;
+  }
+  /* 라벨(작은 회색 글씨)는 약간 흐리게 */
+  .stock-card .label { color: #5d6d7e !important; }
+  /* stock-reason은 살짝 다른 톤 */
+  .stock-card .stock-reason {
+    color: #2c3e50 !important;
+    background: #f8f9fb;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-top: 10px;
+    line-height: 1.65;
+  }
+  /* 가격 — 빨강(상승) / 파랑(하락) 강조 */
+  .stock-card .value.up,
+  .stock-card .price-diff.up,
+  .stock-card .up { color: #c0392b !important; font-weight: 700; }
+  .stock-card .value.down,
+  .stock-card .price-diff.down,
+  .stock-card .down { color: #1f618d !important; font-weight: 700; }
+  /* 일반 가격 숫자 */
+  .stock-card .value,
+  .stock-card .rec-price,
+  .stock-card .current-price { color: #1a2332 !important; font-weight: 700; }
+
+  .stock-prices {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 16px;
+    margin: 10px 0;
+    font-size: 14px;
+  }
+  .stock-prices .label {
+    color: #7f8c8d;
+    margin-right: 6px;
+    font-weight: 600;
+  }
+  .stock-prices .value { color: #2c3e50; }
+  .stock-prices .value.up { color: #c0392b; font-weight: 700; }
+  .stock-prices .value.down { color: #2980b9; font-weight: 700; }
+
+  .stock-reason {
+    font-size: 14px;
+    color: #555;
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+
+  /* TL;DR 박스 */
+  .tldr {
+    background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
+    border-left: 4px solid #f39c12;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* 그래서? 박스 */
+  .so-what {
+    background: #e8f4f8;
+    border-left: 4px solid #2980b9;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 6px;
+    font-weight: 600;
+    color: #1a4f6b;
+  }
+
+  .footer {
+    text-align: center;
+    color: #95a5a6;
+    font-size: 12px;
+    margin-top: 24px;
+    padding: 16px;
+  }
+  .up { color: #c0392b; font-weight: 600; }
+  .down { color: #2980b9; font-weight: 600; }
+  strong { color: #c0392b; }
+  ul, ol { padding-left: 1.4em; }
+  li { margin-bottom: 6px; }
+
+  ul.archive-list { list-style: none; padding: 0; }
+  ul.archive-list li {
+    padding: 10px 12px;
+    border-bottom: 1px solid #ecf0f1;
+  }
+  ul.archive-list a {
+    color: #2980b9;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  /* 모바일 */
+  @media (max-width: 720px) {
+    body { padding: 8px; font-size: 15px; }
+    .header { padding: 18px; border-radius: 10px 10px 0 0; }
+    .header h1 { font-size: 20px; }
+    .content { padding: 16px 18px; }
+    .content h2 { font-size: 18px; }
+    .content table { font-size: 13px; }
+    .content th, .content td { padding: 8px 10px; }
+    .stock-card { padding: 14px; }
+    .stock-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .stock-header h3, .stock-header .stock-name { font-size: 16px; }
+    .stock-prices { grid-template-columns: 1fr; gap: 6px; }
+    .tldr { font-size: 14px; padding: 14px 16px; }
+  }
+
+  /* 표 줄 줄무늬 (가독성) */
+  .content table tr:nth-child(even) td { background: #fafbfc; }
+
+  /* 실시간 가격 행 */
+  .live-price-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr auto 1fr;
+    gap: 6px 10px;
+    align-items: center;
+    background: #f0f4f8;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin: 8px 0 12px;
+    font-size: 14px;
+  }
+  .live-price-row .label { color: #7f8c8d; font-weight: 600; }
+  .live-price-row .rec-price { color: #2c3e50; font-weight: 700; }
+  .live-price-row .current-price {
+    color: #1a2332;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .live-price-row .current-price.loading { color: #95a5a6; }
+  .live-price-row .price-diff {
+    color: #7f8c8d;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .live-price-row .price-diff.up { color: #c0392b; }
+  .live-price-row .price-diff.down { color: #2980b9; }
+
+  @media (max-width: 720px) {
+    .live-price-row {
+      grid-template-columns: auto 1fr;
+      font-size: 13px;
+    }
+  }
+
+  .last-refreshed {
+    font-size: 12px;
+    color: #95a5a6;
+    text-align: right;
+    margin: 4px 4px 16px;
+  }
+  .refresh-btn {
+    background: #2c3e50;
+    color: #fff;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 8px;
+  }
+  .refresh-btn:hover { background: #1a2332; }
+</style>
+</head>
+<body>
+  <div class="nav">
+    <a href="index.html">📚 전체 목록</a>
+    <a href="latest.html">📅 가장 최근</a>
+  </div>
+  <div class="header">
+    <h1>📊 시장 브리핑</h1>
+    <div class="date">2026년 04월 27일 (Mon) 00:15 KST</div>
+  </div>
+  <div class="content">
+    <div class="last-refreshed">
+      📡 실시간 가격 갱신: <span class="last-refreshed-time">로딩 중...</span>
+      <button class="refresh-btn" onclick="manualRefresh()">🔄 새로고침</button>
+    </div>
+    <h2>📝 한 줄 정리 (TL;DR)</h2>
+<div class="tldr">
+⏰ 2026-04-27 오전 00:09 KST 기준 — 미국 장 마감 후, 한국 장 개장 전 브리핑이야.<br/>
+🌍 시장 분위기: 나스닥·S&amp;P500 상승 마감했지만, 이란 핵협상 결렬로 호르무즈 해협 봉쇄 3개월째 → 원유 급등(WTI $96), 선물은 하락 출발 중. NVDA·SK하이닉스 RSI 86~87 <strong>과매수 극단</strong> 구간 진입 → 추격매수 위험.<br/>
+💼 현재 포지션: 오늘 추적 중인 보유 포지션 없음 (데이터 손실). 삼성전자 4/29·MSFT 4/29·AAPL 4/30 어닝 D-2~D-3 → 발표 전 변동성 주의.<br/>
+🎯 단타 후보: SMCI(장중 +5.65%, 거래량 1.13x), 씨에스윈드(풍력 에너지 수혜 + 임원 공시 9건), KODEX 에너지화학(20일 +22.27%) — 단, 과매수 구간 많으니 진입 전 꼭 확인.
+</div>
+<div class="so-what">→ 그래서? 오늘 핵심은 <strong>"추격매수 금지 + 어닝 앞두고 보수적 포지션 + 에너지·방산 테마 선별 매수 검토"</strong>야. NVDA·하이닉스는 RSI 87 수준이라 지금 들어가면 고점 물릴 확률 높아. 대신 아직 안 오른 에너지화학·철강·풍력 관련주 발굴이 오늘 숙제.</div>
+<h2>🚫 오늘 절대 사지 말 것 (DO NOT BUY)</h2>
+<div class="stock-card warning" data-recommended-at="1222000" data-section="avoid" data-stop="1100000" data-target1="1300000" data-target2="1400000" data-ticker="000660.KS">
+<div class="stock-header">
+<h3 class="stock-name">SK하이닉스 <small style="font-weight:400">000660.KS · KOSPI</small></h3>
+<span class="stock-allocation">🚫 추격매수 금지</span>
+</div>
+<div class="live-price-row">
+<span class="label">어제 종가</span> <span class="rec-price">1,222,000원</span>
+<span class="label">현재가</span> <span class="current-price loading">로딩 중...</span>
+<span class="label">변동</span> <span class="price-diff">—</span>
+</div>
+<div class="stock-prices">
+    52주 위치: <strong>96%</strong> (고점 1,267,000원 코앞) · RSI: <strong>85.9 (과매수)</strong> · MA200: 602,458원
+  </div>
+<div class="stock-reason">
+    RSI가 85.9야 — RSI 70 넘으면 "너무 많이 올랐다"는 신호인데, 86이면 극단적 과매수 구간이야. 52주 최고가(1,267,000원) 대비 지금 96% 위치 — 그러니까 거의 신고가 바로 코앞이라는 얘기야. 공시를 보면 4/22에 SK하이닉스가 <strong>자기주식 처분(매도) 결정</strong>을 공시했어 — 회사 스스로 주식을 팔겠다는 거니까 단기 오버행(물량 부담) 리스크가 있어. 어닝은 4/22에 이미 발표됐는데 "성과급만 수십억"이라는 뉴스가 나올 정도로 실적은 좋지만, 좋은 실적이 이미 주가에 다 반영된 상태야 (PER·PBR 데이터 없어서 추정). 지금 들어가면 "호재 다 반영 후 고점 물리기" 전형적 함정 패턴이야 — 관망이 정답.
+  </div>
+</div>
+<div class="stock-card warning" data-recommended-at="208.27" data-section="avoid" data-stop="188" data-target1="220" data-target2="235" data-ticker="NVDA">
+<div class="stock-header">
+<h3 class="stock-name">NVIDIA <small style="font-weight:400">NVDA · NASDAQ</small></h3>
+<span class="stock-allocation">🚫 추격매수 금지</span>
+</div>
+<div class="live-price-row">
+<span class="label">어제 종가</span> <span class="rec-price">$208.27</span>
+<span class="label">현재가</span> <span class="current-price loading">로딩 중...</span>
+<span class="label">변동</span> <span class="price-diff">—</span>
+</div>
+<div class="stock-prices">
+    52주 위치: <strong>96%</strong> (고점 $212.17 코앞) · RSI: <strong>86.7 (극단 과매수)</strong> · 시총 $5.1조
+  </div>
+<div class="stock-reason">
+    어제 +4.32% 급등해서 시총 5조 달러 돌파 기록 — CNBC에서 "사상 최고치"라고 보도했어. 근데 RSI 86.7은 SK하이닉스(85.9)보다도 더 극단적이야. 52주 고점($212.17) 불과 $4 아래인데, 여기서 추격매수(이미 오른 주식 따라 사기)하면 조정 왔을 때 -10%~-15% 물릴 수 있어. 거래량도 평균 대비 1.33x로 높은 건 맞는데, 이미 과열 신호야. 다음 어닝(5/20)까지 한 달 남았고, "이 테크회사가 NVDA를 세계 최고 수익회사 자리에서 밀어낼 것"이라는 뉴스도 나오는 상황 — 지금은 관망하고 RSI 65 아래로 내려올 때 진입 검토해.
+  </div>
+</div>
+<div class="stock-card warning" data-recommended-at="481000" data-section="avoid" data-stop="440000" data-target1="510000" data-target2="527000" data-ticker="373220.KS">
+<div class="stock-header">
+<h3 class="stock-name">LG에너지솔루션 <small style="font-weight:400">373220.KS · KOSPI</small></h3>
+<span class="stock-allocation">🚫 지금은 추격매수 위험</span>
+</div>
+<div class="live-price-row">
+<span class="label">어제 종가</span> <span class="rec-price">481,000원</span>
+<span class="label">현재가</span> <span class="current-price loading">로딩 중...</span>
+<span class="label">변동</span> <span class="price-diff">—</span>
+</div>
+<div class="stock-prices">
+    52주 위치: <strong>82%</strong> · RSI: <strong>71.5 (과매수)</strong> · 영업이익률: <strong>-4.5% (적자)</strong>
+</div>
+<div class="stock-reason">
+    어제 +3.11% 올랐고 RSI 71.5 — 과매수 영역이야. 가장 큰 문제는 <strong>영업이익률 -4.5% (적자)</strong>라는 거야. 즉 지금 돈을 잃으면서 장사하고 있어. ROE도 0.3%로 사실상 제로야. 폴란드 공장에서 ESS(에너지저장장치) 배터리 첫 출하 뉴스는 긍정적이고, EU 유럽 시장 공략도 좋은 방향이야. 근데 다음 어닝(5/7)에서 적자 규모 확인 전까지는 불확실성이 너무 커 — 어닝 결과 보고 나서 진입 검토하는 게 안전해. 부채비율도 76.8로 꽤 높아.
+  </div>
+</div>
+<div class="so-what">→ 그래서? SK하이닉스·NVDA는 "실적 좋은 거 맞아 — 근데 그게 이미 주가에 다 반영됨". 지금 사는 건 달리는 기차에 뒤늦게 올라타는 격이야. LG엔솔은 어닝 전 불확실성 + 적자 기업 → 5/7 어닝 확인 후 재검토.</div>
+<h2>🏆 오늘 살 거라면 — TOP 3 우선순위</h2>
+<div class="stock-card priority-1" data-recommended-at="219500" data-section="top-priority" data-stop="205000" data-target1="229000" data-target2="240000" data-ticker="005930.KS">
+<div class="stock-header">
+<h3 class="stock-name">🥇 삼성전자 <small style="font-weight:400">005930.KS · KOSPI</small></h3>
+<span class="stock-allocation">30% · 900,000원</span>
+</div>
+<div class="live-price-row">
+<span class="label">추천 시</span> <span class="rec-price">219,500원</span>
+<span class="label">현재가</span> <span class="current-price loading">로딩 중...</span>
+<span class="label">변동</span> <span class="price-diff">—</span>
+</div>
+<div class="stock-prices">
+    📥 매수 검토가: 215,000~220,000원 | 🎯 1차 목표: 229,000원 | 🎯 2차 목표: 240,000원 | 🛑 손절: 205,000원 | ⏱ 기간: 2~4주 | ⚠️ 위험: 노조 파업 + 어닝 변동성
+  </div>
+<div class="stock-reason">
+<strong>(a) 공시 신호:</strong> 4/24 자기주식취득결과보고서 — 회사가 자기 주식을 사들이고 있다는 뜻이야. 최대주주 소유 주식 변동 공시(4/13)도 있어. 자사주 매입은 "우리 주가 싸다"는 경영진 신호로 읽혀 — 긍정적 신호야.<br/>
+<strong>(b) 기술적 위치:</strong> RSI 69.3 — SK하이닉스(85.9)·NVDA(86.7)보다 훨씬 건전해. 52주 위치 94%지만 MA200(121,459원) 대비 현재가가 엄청 높아서 장기 상승 추세 확인됨. 52주 고점 229,500원이 저항선.<br/>
+<strong>(c) 펀더멘털:</strong> PER·PBR 데이터 없지만 ROE 10.8%, 영업이익률 13.3%, 매출성장률 23.8% — 실적 개선 중. 베타 1.21 (시장보다 약간 더 움직임). 배당수익률 1.03%.<br/>
+<strong>(d) 종목별 뉴스 (핵심!):</strong> 노조가 이재용 회장 자택 앞 집회 준비 중, 주주단체는 맞불집회 예고. <strong>"노조 집회날 파운드리 생산 58% 급락"</strong> 뉴스 — 파업 현실화 시 단기 부정적. 반면 다음달 21일 예정이라 지금 당장은 아직 아니야. '삼성 월렛 여행' 신제품 출시도 긍정 뉴스.<br/>
+<strong>(e) 거시 흐름:</strong> 어닝 D-2(4/29). 애널리스트 36명 중 <strong>매수·강력매수가 36명</strong>, 매도·강력매도 1명뿐 — 월가 컨센서스(대체적 의견) 압도적 긍정. 중동 리스크로 반도체 수요 감소 우려가 있지만, AI 수요는 구조적 성장 중.<br/>
+<strong>(f) 위험 + 손절 조건:</strong> 파업 실제 발생 시 즉시 비중 축소 검토. 어닝 발표(4/29) 전후 변동성 클 수 있어 — 발표 전날은 신규 진입 자제 권장. 205,000원 깨지면 손절.
+  </div>
+</div>
+<div class="stock-card priority-2" data-recommended-at="0" data-section="top-priority" data-stop="0" data-target1="0" data-target2="0" data-ticker="112610.KS">
+<div class="stock-header">
+<h3 class="stock-name">🥈 씨에스윈드 <small style="font-weight:400">112610.KS · KOSPI</small></h3>
+<span class="stock-allocation">25% · 750,000원</span>
+</div>
+<div class="live-price-row">
+<span class="label">추천 시</span> <span class="rec-price">장 시작 후 확인</span>
+<span class="label">현재가</span> <span class="current-price loading">로딩 중...</span>
+<span class="label">변동</span> <span class="price-diff">—</span>
+</div>
+<div class="stock-prices">
+    📥 매수 검토가: 시가 확인 후 판단 | 🎯 1차 목표: 매수가 +8% | 🎯 2차 목표: 매수가 +15% | 🛑 손절: 매수가 -7% | ⏱ 기간: 2~6주 | ⚠️ 위험: 임원 매매 방향 미확인
+  </div>
+<div class="stock-reason">
+<strong>(a) 공시 신호:</strong> DART에서 <strong>임원 공시 9건 (김기준·안창현·나재원 3명)</strong> — 이 데이터에서 두 번째로 많은 공시 수야. 여러 임원이 동시에 주식 신고한다는 건 내부자들이 뭔가 움직이고 있다는 신호야. 단, 공시가 매수인지 매도인지는 DART 링크 직접 확인 필수야.<br/>
+<strong>(b) 기술적 위치:</strong> 직접 데이터는 없지만, KODEX 에너지화학 ETF가 20일 +22.27%, KODEX 철강 20일 +35.96% — 씨에스윈드(풍력 타워 제조)가 속한 에너지/인프라 섹터 전체가 강세야. 섹터 모멘텀이 강할 때 업종 내 개별주도 같이 오르는 경향이 있어.<br/>
+<strong>(c) 펀더멘털:</strong> 씨에스윈드는 전 세계에 풍력 타워(바람으로 전기 만드는 기계의 기둥)를 파는 회사야. 중동 전쟁으로 유가가 급등($96)하면서 각국이 에너지 자립을 위해 재생에너지 투자 늘리는 상황 → 풍력 수요 구조적 증가 중. 구체적 PER·ROE는 장 시작 후 HTS(주식 거래 프로그램)에서 확인해봐.<br/>
+<strong>(d) 뉴스:</strong> "구조적 가스 수요 파괴가 LNG 시장 위협"(OilPrice) — 화석연료 장기 불확실성 → 재생에너지 수혜. "캐나다 배터리급 리튬 정제소 오픈" 뉴스도 에너지 전환 테마를 뒷받침해.<br/>
+<strong>(e) 거시 흐름:</strong> 호르무즈 해협 봉쇄 3개월 → 원유 공급 불안 장기화 → 각국 에너지 자립 가속 → 풍력·태양광 발주 급증 시나리오. 이게 씨에스윈드에 직접 수혜야.<br/>
+<strong>(f) 위험 + 손절 조건:</strong> 임원 공시가 매도 방향이라면 즉시 재검토. 장 시작 후 매수가 확정 후 -7% 깨지면 손절. 추가 조사(DART 링크 확인, HTS 재무제표 확인) 먼저 해봐.
+  </div>
+</div>
+<div class="stock-card priority-3" data-recommended-at="0" data-section="top-priority" data-stop="0" data-target1="0" data-target2="0" data-ticker="044450.KS">
+<div class="stock-header">
+<h3 class="stock-name">🥉 KSS해운 <small style="font-weight:400">044450.KS · KOSPI</small> <span class="label">⚠️ 추가 조사 필요</span></h3>
+<span class="stock-allocation">15% · 450,000원</span>
+</div>
+<div class="live-price-row">
+<span class="label">추천 시</span> <span class="rec-price">장 시작 후 확인</span>
+<span class="label">현재가</span> <span class="current-price loading">로딩 중...</span>
+<span class="label">변동</span> <span class="price-diff">—</span>
+</div>
+<div class="stock-prices">
+    📥 매수 검토가: 시가 확인 후 판단 | 🎯 1차 목표: 매수가 +10% | 🎯 2차 목표: 매수가 +20% | 🛑 손절: 매수가 -8% | ⏱ 기간: 1~4주 | ⚠️ 위험: 소형주 유동성 + 임원 매매 방향 미확인
+  </div>
+<div class="stock-reason">
+<strong>(a) 공시 신호:</strong> DART 임원 공시 3건 — 박종규, 케이에스에스해운우리사주조합, 케이에스에스해운사내근로복지기금. 특히 <strong>우리사주조합(직원들이 자기 회사 주식을 사는 모임)과 사내근로복지기금이 동시에 공시</strong>했다는 건 "내부 직원들이 자기 회사 주식 사고 있다"는 강한 내부자 신뢰 신호일 수 있어 — 단 방향 확인 필수.<br/>
+<strong>(b) 거시 수혜:</strong> 호르무즈 해협 봉쇄 → 중동 우회 항로 늘어남 → 운임(배삯) 상승 → 해운주 전반 수혜. WTI 원유 $96/브렌트 $101로 고유가 → 해운 운임 상승 환경.<br/>
+<strong>(c) 발굴 논리:</strong> 대형 해운주(HMM 등)는 이미 많이 올랐을 가능성 높아. KSS해운은 소형 특수 해운사로, 큰돈이 아직 덜 들어온 상황일 수 있어 → 뒤늦은 섹터 순환 수혜 기대.<br/>
+<strong>(f) 위험 + 주의:</strong> 소형주(거래량 적은 주식)는 한 번에 많이 사면 내가 사는 것만으로 주가가 오르고, 팔 때는 반대로 급락할 수 있어. 전체 자산의 15% 이하로 엄격히 제한. 이 종목은 <strong>반드시 DART 공시 방향 확인 후 진입 검토해</strong>.
+  </div>
+</div>
+<div class="so-what">→ 그래서? 1순위 삼성전자는 자사주 매입 + 압도적 매수 컨센서스 + RSI 아직 70 미만으로 상대적으로 건전해. 2순위 씨에스윈드는 중동 전쟁發 에너지 전환 가속 + 임원 공시 클러스터 신호. 3순위 KSS해운은 호르무즈 봉쇄 → 해운 운임 상승 테마의 숨은 수혜주 후보 — 둘 다 장 시작 후 DART 링크 확인 먼저야. 오늘 왜 AAPL·MSFT를 1~2순위에 안 넣었냐면 — AAPL은 4/30 어닝 D-3 앞두고 불확실성 크고, MSFT는 RSI 75 과매수 + 4/29 어닝 앞두고 방향 모르니까야.</div>
+<h2>📌 아침 추천 포지션 — 지금 상태</h2>
+<div class="stock-card" data-section="position-review">
+<div class="stock-header">
+<h3 class="stock-name">📋 오늘 풀 분석 데이터 없음</h3>
+</div>
+<div class="stock-reason">
+    오늘 추적 중인 보유 포지션 데이터가 없어 (풀 모드가 아직 안 돌았거나 데이터 손실). 어제(4/26) 브리핑에서 CRWV와 NVDA가 언급됐는데, CRWV는 오늘 장중 -6.24%로 미국 하락 Top 1위를 기록하고 있어 — 만약 보유 중이라면 즉시 손절가 확인 필요해. NVDA는 현재가 $208.19로 어제 추천가($208.27) 대비 거의 변동 없어. 정확한 진입가·손절가 데이터가 복구되는 대로 re-평가할게.
+  </div>
+</div>
+<div class="so-what">→ 그래서? 혹시 어제 CRWV 들어간 분이 있으면 지금 당장 현재가 확인하고 손절가 점검해봐. -6%면 작은 돈 아니야. 300만원 중 10%만 넣었어도 -18,000원 손실. 포지션 데이터 복구 전까지는 모든 종목 수동으로 확인해줘.</div>
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>시장 브리핑 Part 2 — 2026-04-27</title>
+
+</head>
+<body>
+<!-- ══════════════════════════════════════════════
+     ⚡ 단타 후보
+══════════════════════════════════════════════ -->
+<h2>⚡ 지금 단타 후보 (Top 1~3)</h2>
+<p>
+  ※ 한국장 데이터 미수신(5분봉 없음). 미국 장 마감 후 브리핑 기준. 장 개시 전 재확인 필수.<br/>
+  ※ 단타는 1~3% 손절 원칙 — 300만원 전체로 단타 진입 절대 금지. 최대 50만원(1/6) 이하 진입 권장.
+</p>
+<!-- 단타 1 -->
+<div class="stock-card daytrade">
+<div class="card-header">
+<span class="card-title">🔥 SMCI (Super Micro Computer)</span>
+<span class="badge badge-orange">단타 1순위</span>
+<span class="badge badge-green">장중 +5.65%</span>
+<span class="badge badge-cyan">거래량 1.13x</span>
+</div>
+<div class="card-body">
+<div class="price-row">
+<span>현재가 <strong>$29.07</strong></span>
+<span>52주: 저 / 고 데이터 추정 필요</span>
+<span>거래량 평균 대비 1.13× (폭증 초기)</span>
+</div>
+<div class="entry-table">
+<div class="entry-box"><div class="el">진입 고려가</div><div class="ev y">$28.80~29.10</div></div>
+<div class="entry-box"><div class="el">익절 목표</div><div class="ev g">$30.00~30.50 (+3%)</div></div>
+<div class="entry-box"><div class="el">손절 라인</div><div class="ev r">$28.20 (-3%)</div></div>
+</div>
+<ul class="reason-list">
+<li><strong>모멘텀:</strong> 장중 +5.65%로 미국 상승 Top 1위. NVIDIA 실적 서프라이즈(+4.32%, 시총 5조 달러 돌파) 후 AI 서버 공급망 종목 강한 반사 수혜.</li>
+<li><strong>배경:</strong> SMCI는 NVDA GPU 장착 AI 서버의 핵심 공급사. NVDA가 사상 최고가(시총 $5.1조) 경신하면 SMCI에 수주 기대감이 집중되는 구조.</li>
+<li><strong>뉴스 연계:</strong> Yahoo Finance는 "Oracle의 SMCI Nvidia 서버 주문 변화가 AI 인프라 투자 스토리를 어떻게 바꿨나"를 다루며 SMCI에 시장 주목도 집중.</li>
+<li><strong>위험:</strong> SMCI는 과거 회계감사 지연 이슈가 있었던 종목. 단타 이후 펀더멘털 신뢰 낮으므로 장기 보유 부적합 — 익절가 도달 즉시 매도.</li>
+<li><strong>단타 원칙:</strong> 반드시 손절 $28.20 이탈 시 즉시 기계적 청산. 오버나이트 보유 비추천.</li>
+</ul>
+<div class="risk-note">⚠ 거래량 1.13× — 폭증 수준은 아님. 모멘텀 약해지면 빠르게 빠질 수 있음. 진입 전 1분봉 확인 필수.</div>
+</div>
+</div>
+<!-- 단타 2 -->
+<div class="stock-card daytrade">
+<div class="card-header">
+<span class="card-title">🔥 NVDA (NVIDIA)</span>
+<span class="badge badge-orange">단타 2순위 (장기도 겸용)</span>
+<span class="badge badge-green">장중 +2.51%</span>
+<span class="badge badge-cyan">거래량 1.27x</span>
+</div>
+<div class="card-body">
+<div class="price-row">
+<span>현재가 <strong>$208.19</strong></span>
+<span>고점 $210.95 / 저점 $199.81</span>
+<span>거래량 1.27× ✅ 의미 있는 폭증</span>
+</div>
+<div class="entry-table">
+<div class="entry-box"><div class="el">단타 진입 고려</div><div class="ev y">$206~208 눌림</div></div>
+<div class="entry-box"><div class="el">단타 익절</div><div class="ev g">$213~215 (+2.5%)</div></div>
+<div class="entry-box"><div class="el">단타 손절</div><div class="ev r">$203 (-2.5%)</div></div>
+</div>
+<ul class="reason-list">
+<li><strong>모멘텀:</strong> 시총 $5.1조 돌파로 사상 최고가 경신 중. 거래량 1.27× = 기관 참여 확인된 상승. RSI 86.7 — 과매수권이지만 추세 강도가 유지되는 동안은 단기 유효.</li>
+<li><strong>뉴스:</strong> CNBC "Nvidia stock closes at record, pushing market cap past $5 trillion" — 전 세계 헤드라인 장식. 다음 어닝 5월 20일(D-23)까지 기대감 지속 가능.</li>
+<li><strong>거시:</strong> 10년물 금리 4.31%로 소폭 하락 → 성장주·AI주 부담 경감. VIX 18.71로 안정 구간 진입.</li>
+<li><strong>위험:</strong> RSI 86.7 = 단기 조정 가능성 항상 존재. 고점 $210.95 돌파 실패 시 단기 눌림 확인 후 재진입 고려.</li>
+<li><strong>단타 전략:</strong> 장 초반 $206~208 눌림 시 진입, $213 이상에서 절반 익절 후 트레일링.</li>
+</ul>
+<div class="risk-note">⚠ 장기 후보로도 다루지만 RSI 과매수 구간 — 신규 단타 진입은 눌림 확인 후. 52주 최고가 $212.17 돌파 여부가 핵심 분기점.</div>
+</div>
+</div>
+<!-- 단타 3 -->
+<div class="stock-card daytrade">
+<div class="card-header">
+<span class="card-title">🔍 MSFT (Microsoft)</span>
+<span class="badge badge-orange">단타 3순위</span>
+<span class="badge badge-green">+1.13% / 최근 1시간 +0.36%</span>
+<span class="badge badge-yellow">어닝 D-2 (4/29)</span>
+</div>
+<div class="card-body">
+<div class="price-row">
+<span>현재가 <strong>$424.58</strong></span>
+<span>고점 $424.89 / 저점 $415.80</span>
+<span>거래량 0.65× (보통 수준)</span>
+</div>
+<div class="entry-table">
+<div class="entry-box"><div class="el">단타 진입</div><div class="ev y">$420~422 눌림</div></div>
+<div class="entry-box"><div class="el">익절 목표</div><div class="ev g">$430~435 (+2%)</div></div>
+<div class="entry-box"><div class="el">손절</div><div class="ev r">$415 (-2%)</div></div>
+</div>
+<ul class="reason-list">
+<li><strong>어닝 프리뷰 매매:</strong> 4월 29일 실적 발표(D-2). 어닝 직전 기대감 선반영 매수 패턴 — "어닝 전 매수, 발표 당일 반응 보고 청산"이 전형적 단타 전략.</li>
+<li><strong>기술적:</strong> RSI 75 (과매수 경계), MA20($391.97) 위 안착, 최근 1시간 +0.36% 상승 지속.</li>
+<li><strong>뉴스:</strong> "Wall Street의 슈퍼볼 수요일 — Alphabet·Amazon·MSFT·Meta 실적 + Powell 기자회견 동시 예정" → 이벤트 집중 주간, 변동성 예상.</li>
+<li><strong>위험:</strong> 어닝 서프라이즈 실패 시 급락 가능. 거래량 0.65× = 기관 확신 부족. 발표 당일 보유는 도박에 가까움 → 단타는 발표 전날 청산 원칙.</li>
+</ul>
+<div class="risk-note">⚠ 어닝 직전 변동성 매우 큼 — 소액(30만원 이하) 진입만 고려. 발표 후 보유 지양.</div>
+</div>
+</div>
+<div class="so-what">단타는 SMCI(AI서버 반사수혜) → NVDA(눌림 재진입) → MSFT(어닝 프리뷰) 순. 한국장 5분봉 없어 한국 단타 후보 제시 불가 — 오늘 장 개시 후 코스닥 거래량 폭증 종목 직접 확인 필수.</div>
+<hr class="divider"/>
+<!-- ══════════════════════════════════════════════
+     🎯 오늘 행동 가이드
+══════════════════════════════════════════════ -->
+<h2>🎯 오늘 행동 가이드 (장기 매수 검토)</h2>
+<p>
+  대형주 최대 2개 / 발굴 후보 4개 이상 / 각 5~8문장 근거 포함
+</p>
+<!-- ── 대형주 1 ── -->
+<h3>📌 대형주 후보 (최대 2개)</h3>
+<div class="stock-card candidate">
+<div class="card-header">
+<span class="card-title">① 삼성전자 (005930.KS)</span>
+<span class="badge badge-green">대형주 #1</span>
+<span class="badge badge-yellow">어닝 D-2 (4/29)</span>
+<span class="badge badge-red">노조 파업 리스크</span>
+</div>
+<div class="card-body">
+<div class="price-row">
+<span>종가 <strong>₩219,500</strong></span>
+<span>RSI 69.3</span>
+<span>52주 위치 <strong>94%</strong></span>
+<span>MA200 ₩121,459 (현재가 훨씬 위)</span>
+</div>
+<ul class="reason-list">
+<li><strong>(a) 공시 신호:</strong> 20260424 자기주식취득결과보고서 제출 — 삼성전자가 실제로 자사주를 매입했다는 확인. 자사주 매입은 주가 지지 의지의 공식 표현. 최대주주 소유 변동 신고(04/13)까지 겹쳐 내부 관리 강화 시그널.</li>
+<li><strong>(b) 기술적:</strong> RSI 69.3 — 70 근접, 과매수 직전. 52주 최고가 ₩229,500 대비 4.5% 하방에 위치. MA20(₩202,743) 위 안착, 장기 상승 추세 유지. 고점 돌파 시도 구간.</li>
+<li><strong>(c) 펀더멘털:</strong> 시총 1,448조원 (국내 1위), ROE 10.8%, 영업이익률 13.3%, 매출성장률 +23.8% YoY. PER/PBR 미제공이지만 반도체 슈퍼사이클 수혜로 이익 급증 중. 배당수익률 1.03%.</li>
+<li><strong>(d) 종목 뉴스 (핵심):</strong> [동아일보] "삼성전자 노조 집회날 파운드리 생산 58% 급락 — 파업 우려 커져." 다음달 파업 예고 시 하루 손실 1조원 추정(매경). 주주단체 맞불집회 예고. 파업 현실화 여부가 가장 중요한 변수 — 현재는 '우려' 단계이므로 전면 회피보다 리스크 반영 비중 축소 접근.</li>
+<li><strong>(e) 거시 영향:</strong> 글로벌 반도체 슈퍼사이클(SK하이닉스 성과급 6억 화제) 속 삼성 HBM 납품 확대 기대. 오픈AI "한국 없이 ChatGPT 없다" 발언 — 삼성·SK 반도체 수요 재확인. KODEX 반도체 ETF 20일 수익률 +25.3%로 섹터 강세.</li>
+<li><strong>(f) 위험 + 손절:</strong> ① 노조 파업 실행 시 주가 단기 -3~5% 충격 가능 → ₩210,000 이탈 시 손절 고려. ② 4/29 어닝 발표 — 컨센서스 하회 시 급락 가능. 어닝 전 50% 이하 진입 후 결과 보고 추가 결정.</li>
+</ul>
+<div class="risk-note">⚠ 노조 파업 + 어닝 발표 겹침 = 이번 주 변동성 최대 구간. 분할 진입 필수. 전액 투입 금지.</div>
+</div>
+</div>
+<div class="stock-card candidate">
+<div class="card-header">
+<span class="card-title">② LG에너지솔루션 (373220.KS)</span>
+<span class="badge badge-green">대형주 #2</span>
+<span class="badge badge-yellow">어닝 D-10 (5/7)</span>
+<span class="badge badge-cyan">ESS 유럽 본격화</span>
+</div>
+<div class="card-body">
+<div class="price-row">
+<span>종가 <strong>₩481,000</strong> (+3.11%)</span>
+<span>RSI 71.5</span>
+<span>52주 위치 <strong>82%</strong></span>
+<span>MA200 ₩393,800 (현재가 위)</span>
+</div>
+<ul class="reason-list">
+<li><strong>(a) 공시 신호:</strong> 20260422·24 임원 주요주주 소유상황 신고 2건. 조상연, Choi Hae Won 신고 — 내부자 매매 방향은 DART 직접 확인 필요. 내부자 활동 증가 자체는 모니터링 필요 시그널.</li>
+<li><strong>(b) 기술적:</strong> RSI 71.5 — 과매수 경계, 하지만 3일 연속 MA20(₩422,850) 위 안착 + 장기 상승 추세 확인. 52주 고점 ₩527,000 대비 9% 하방 — 추가 상승 여지 존재. ATR 3.87%로 일일 변동폭 큼.</li>
+<li><strong>(c) 펀더멘털:</strong> 영업이익률 -4.5%(적자), ROE 0.3% 낮음. 하지만 시총 112.6조, 부채비율 76.8%는 대형 제조사 기준 관리 가능 수준. 현재는 적자지만 ESS 신사업 + 유럽 공장 가동으로 이익 개선 모멘텀 진행 중.</li>
+<li><strong>(d) 종목 뉴스 (핵심):</strong> "LG에너지솔루션, 폴란드에서 ESS 배터리 첫 출하 — 유럽 공략 본격화." "EU 대형 ESS 프로젝트 + 벤츠 LFP 배터리 공급 본격화"(아시아타임즈). ESS는 태양광·풍력 연계 에너지 저장으로 유럽 에너지 전환 수혜 직결 — 중동 전쟁발 고유가 지속 시 유럽 재생에너지 투자 가속 → LG엔솔 수혜.</li>
+<li><strong>(e) 거시 영향:</strong> 호르무즈 해협 폐쇄 → 유가 $96(WTI) 유지 → 유럽 에너지 전환 투자 확대 → ESS 수요 급증. KODEX 에너지화학 ETF 20일 수익률 +22.3%로 섹터 강세 확인.</li>
+<li><strong>(f) 위험 + 손절:</strong> 영업 적자 지속 중 — 어닝(5/7) 결과가 기대치 하회 시 급락 가능. ₩455,000(MA60) 이탈 시 손절 고려. 현재 과매수권이므로 신규 매수는 ₩465,000~470,000 눌림 후 진입 더 유리.</li>
+</ul>
+</div>
+</div>
+<!-- ── 발굴 후보 ── -->
+<h3>🔭 발굴 후보 (4개 이상 — 대중에 덜 알려진 종목)</h3>
+</body></html>
+  </div>
+  <div class="footer">
+    이 리포트는 자동 생성된 정보 정리이며 투자 자문이 아닙니다.<br>
+    모든 투자 판단과 결과의 책임은 본인에게 있습니다.
+  </div>
+
+<script>
+// 실시간 가격 갱신 (Yahoo Finance public API)
+// 페이지에 [data-ticker="..."] [data-recommended-at="..."] 속성을 가진 카드의
+// 현재가, 추천 시점 대비 변동률을 매분 갱신.
+
+async function fetchPrice(ticker) {
+  const yahoo = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1m&range=1d`;
+  const proxy = 'https://corsproxy.io/?' + encodeURIComponent(yahoo);
+  try {
+    const r = await fetch(proxy, { cache: 'no-store' });
+    if (!r.ok) throw new Error('http ' + r.status);
+    const d = await r.json();
+    const meta = d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta;
+    if (!meta || meta.regularMarketPrice == null) return null;
+    return {
+      price: meta.regularMarketPrice,
+      previousClose: meta.previousClose,
+      currency: meta.currency || '',
+    };
+  } catch (e) {
+    console.warn('price fetch fail', ticker, e);
+    return null;
+  }
+}
+
+function fmtNum(n, cur) {
+  if (n == null || isNaN(n)) return '—';
+  if (cur === 'USD') return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Number(n).toLocaleString('ko-KR', { maximumFractionDigits: 2 }) + '원';
+}
+
+async function refreshAll() {
+  const cards = document.querySelectorAll('[data-ticker]');
+  for (const card of cards) {
+    const ticker = card.dataset.ticker;
+    const recAt = parseFloat(card.dataset.recommendedAt || '0');
+    const result = await fetchPrice(ticker);
+    if (!result) continue;
+
+    const cur = card.querySelector('.current-price');
+    const diff = card.querySelector('.price-diff');
+
+    if (cur) {
+      cur.textContent = fmtNum(result.price, result.currency);
+      cur.classList.remove('loading');
+    }
+    if (diff && recAt > 0) {
+      const pct = ((result.price - recAt) / recAt) * 100;
+      const sign = pct >= 0 ? '+' : '';
+      diff.textContent = sign + pct.toFixed(2) + '%';
+      diff.classList.remove('up', 'down');
+      if (pct > 0.05) diff.classList.add('up');
+      else if (pct < -0.05) diff.classList.add('down');
+    }
+    await new Promise(r => setTimeout(r, 150));
+  }
+  const ts = new Date().toLocaleTimeString('ko-KR');
+  document.querySelectorAll('.last-refreshed-time').forEach(el => el.textContent = ts);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  refreshAll();
+  setInterval(refreshAll, 60000);
+});
+
+// 수동 새로고침 버튼
+window.manualRefresh = function() {
+  const btn = document.querySelector('.refresh-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 갱신 중...'; }
+  refreshAll().finally(() => {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 새로고침'; }
+  });
+};
+</script>
+</body>
+</html>
