@@ -1,17 +1,61 @@
 {
-  "saved_at": "2026-04-28T23:41:25.321968",
+  "saved_at": "2026-04-28T23:47:35.635555",
   "date": "2026-04-28",
   "positions": [
     {
-      "ticker": "198940.KS",
-      "name": "🥇 1순위 — 한주라이트메탈198940.KS · KOSPI · 발굴 후보",
+      "ticker": "000660.KS",
+      "name": "🚫 추격매수 함정 — SK하이닉스000660.KS · KOSPI",
+      "section": "avoid",
+      "card_type": "warning",
+      "allocation": "BUY 차단",
+      "recommended_at": null,
+      "target_1": null,
+      "target_2": null,
+      "stop_loss": null
+    },
+    {
+      "ticker": "NVDA",
+      "name": "🚫 추격매수 함정 — NVIDIANVDA · 나스닥",
+      "section": "avoid",
+      "card_type": "warning",
+      "allocation": "BUY 차단",
+      "recommended_at": null,
+      "target_1": null,
+      "target_2": null,
+      "stop_loss": null
+    },
+    {
+      "ticker": "005930.KS",
+      "name": "🚫 어닝 도박 — 삼성전자005930.KS · KOSPI",
+      "section": "avoid",
+      "card_type": "warning",
+      "allocation": "BUY 차단",
+      "recommended_at": null,
+      "target_1": null,
+      "target_2": null,
+      "stop_loss": null
+    },
+    {
+      "ticker": "005490.KS",
+      "name": "🥇 1순위 — POSCO홀딩스005490.KS · KOSPI",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "15% · 450,000원 · 추가 조사 필요",
-      "recommended_at": 0.0,
-      "target_1": 0.0,
-      "target_2": 0.0,
-      "stop_loss": 0.0
+      "allocation": "20% · 600,000원",
+      "recommended_at": 465000.0,
+      "target_1": 488000.0,
+      "target_2": 510000.0,
+      "stop_loss": 430000.0
+    },
+    {
+      "ticker": "005380.KS",
+      "name": "🥈 2순위 — 현대차005380.KS · KOSPI",
+      "section": "top-priority",
+      "card_type": "candidate",
+      "allocation": "20% · 600,000원",
+      "recommended_at": 557000.0,
+      "target_1": 585000.0,
+      "target_2": 620000.0,
+      "stop_loss": 515000.0
     }
   ]
 }

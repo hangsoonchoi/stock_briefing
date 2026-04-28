@@ -2,3 +2,5 @@
 {"date": "2026-04-25", "ticker": "BBB", "name": "고점추천", "price_at_rec": 200, "category": "priority-2", "rsi": 78, "year_position": 0.95, "market_cap": 50000000000000.0, "sector": "반도체"}
 {"date": "2026-04-26", "ticker": "CCC", "name": "발굴좋음", "price_at_rec": 50, "category": "discovery", "rsi": 50, "year_position": 0.3, "market_cap": 500000000000.0, "sector": "바이오"}
 {"date": "2026-04-26", "ticker": "DDD", "name": "단타과열", "price_at_rec": 300, "category": "intraday", "rsi": 85, "year_position": 0.99, "market_cap": 100000000000000.0, "sector": "AI"}
+{"date": "2026-04-28", "ticker": "005490.KS", "name": "🥇 1순위 — POSCO홀딩스005490.KS · KOSPI", "price_at_rec": 465000.0, "category": "top-priority", "rsi": null, "year_position": null, "news_count": null, "reddit_score": null, "sector": null, "market_cap": null, "change_pct": null, "vol_vs_avg": null}
+{"date": "2026-04-28", "ticker": "005380.KS", "name": "🥈 2순위 — 현대차005380.KS · KOSPI", "price_at_rec": 557000.0, "category": "top-priority", "rsi": null, "year_position": null, "news_count": null, "reddit_score": null, "sector": null, "market_cap": null, "change_pct": null, "vol_vs_avg": null}
