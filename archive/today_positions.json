@@ -1,83 +1,83 @@
 {
-  "saved_at": "2026-04-26T22:40:11.224187",
-  "date": "2026-04-26",
+  "saved_at": "2026-04-28T20:26:55.324599",
+  "date": "2026-04-28",
   "positions": [
     {
-      "ticker": "CRWV",
-      "name": "CoreWeaveCRWV · 나스닥",
-      "section": "sell-now",
-      "card_type": "warning",
-      "allocation": "🚨 즉시 매도 검토",
-      "recommended_at": 110.13,
-      "target_1": 120.0,
-      "target_2": 130.0,
-      "stop_loss": 101.0
-    },
-    {
-      "ticker": "NVDA",
-      "name": "NVIDIANVDA · 나스닥",
-      "section": "avoid",
-      "card_type": "warning",
-      "allocation": "🚫 추격매수 금지",
-      "recommended_at": 208.19,
-      "target_1": 225.0,
-      "target_2": 240.0,
-      "stop_loss": 193.0
-    },
-    {
-      "ticker": "000660.KS",
-      "name": "SK하이닉스000660.KS · 코스피",
-      "section": "avoid",
-      "card_type": "warning",
-      "allocation": "🚫 추격매수 금지",
-      "recommended_at": 1225000.0,
-      "target_1": 1320000.0,
-      "target_2": 1450000.0,
-      "stop_loss": 1130000.0
-    },
-    {
-      "ticker": "MSFT",
-      "name": "MicrosoftMSFT · 나스닥",
-      "section": "avoid",
-      "card_type": "warning",
-      "allocation": "🚫 어닝 직전 고위험",
-      "recommended_at": 424.58,
-      "target_1": 450.0,
-      "target_2": 480.0,
-      "stop_loss": 395.0
-    },
-    {
-      "ticker": "005930.KS",
-      "name": "🥇 삼성전자005930.KS · 코스피",
-      "section": "top-priority",
+      "ticker": "112610.KS",
+      "name": "📌 보유 중 — 씨에스윈드112610.KS · KOSPI",
+      "section": "holdings",
       "card_type": "candidate",
-      "allocation": "30% · 900,000원",
-      "recommended_at": 219500.0,
-      "target_1": 229500.0,
-      "target_2": 240000.0,
-      "stop_loss": 206000.0
+      "allocation": "4주 보유 · 투자금 294,400원",
+      "recommended_at": 73600.0,
+      "target_1": 79500.0,
+      "target_2": 88300.0,
+      "stop_loss": 68500.0
+    },
+    {
+      "ticker": "022100.KQ",
+      "name": "⚠️ 데이터 없음 — 포스코DX022100.KQ · KOSDAQ",
+      "section": "holdings",
+      "card_type": "candidate",
+      "allocation": "3주 보유 · 투자금 약 122,436원",
+      "recommended_at": 40812.0,
+      "target_1": 44100.0,
+      "target_2": 49000.0,
+      "stop_loss": 37950.0
     },
     {
       "ticker": "373220.KS",
-      "name": "🥈 LG에너지솔루션373220.KS · 코스피",
-      "section": "top-priority",
+      "name": "📌 보유 중 — LG에너지솔루션373220.KS · KOSPI",
+      "section": "holdings",
       "card_type": "candidate",
-      "allocation": "20% · 600,000원",
-      "recommended_at": 481500.0,
-      "target_1": 519000.0,
-      "target_2": 560000.0,
-      "stop_loss": 445000.0
+      "allocation": "3주 보유 · 투자금 1,435,500원",
+      "recommended_at": 478500.0,
+      "target_1": 516800.0,
+      "target_2": 574200.0,
+      "stop_loss": 444900.0
     },
     {
-      "ticker": "112610.KS",
-      "name": "🥉 씨에스윈드112610.KS · 코스피",
+      "ticker": "000660.KS",
+      "name": "🚫 추격매수 금지 — SK하이닉스000660.KS · KOSPI",
+      "section": "avoid",
+      "card_type": "warning",
+      "allocation": "위험: 과매수 구간",
+      "recommended_at": null,
+      "target_1": null,
+      "target_2": null,
+      "stop_loss": null
+    },
+    {
+      "ticker": "NVDA",
+      "name": "🚫 추격매수 금지 — NVIDIANVDA · NASDAQ",
+      "section": "avoid",
+      "card_type": "warning",
+      "allocation": "위험: RSI 극단 과매수",
+      "recommended_at": null,
+      "target_1": null,
+      "target_2": null,
+      "stop_loss": null
+    },
+    {
+      "ticker": "005380.KS",
+      "name": "🚫 급등 당일 추격매수 금지 — 현대차005380.KS · KOSPI",
+      "section": "avoid",
+      "card_type": "warning",
+      "allocation": "위험: 하루 +6.1% 급등 후 진입",
+      "recommended_at": null,
+      "target_1": null,
+      "target_2": null,
+      "stop_loss": null
+    },
+    {
+      "ticker": "005930.KS",
+      "name": "🥇 1순위 — 삼성전자005930.KS · KOSPI",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "10% · 300,000원 ⚠️ 추가 조사 필요",
-      "recommended_at": 0.0,
-      "target_1": 0.0,
-      "target_2": 0.0,
-      "stop_loss": 0.0
+      "allocation": "30% · 약 900,000원 | 중기(1~3개월)",
+      "recommended_at": 222000.0,
+      "target_1": 229500.0,
+      "target_2": 245000.0,
+      "stop_loss": 210000.0
     }
   ]
 }

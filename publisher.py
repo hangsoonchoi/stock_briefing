@@ -12,11 +12,19 @@ GitHub Pages는 docs/ 폴더를 기본 publish 경로로 인식하므로,
 
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import List, Tuple
 
 from utils import logger
+
+# === KST 타임존 ===
+# GitHub Actions runner 는 UTC 기본 — 명시적으로 KST로 통일
+try:
+    from zoneinfo import ZoneInfo
+    KST = ZoneInfo("Asia/Seoul")
+except ImportError:
+    KST = timezone(timedelta(hours=9))
 
 
 import re as _re
@@ -27,11 +35,31 @@ DOCS_DIR.mkdir(exist_ok=True)
 def _sanitize_html(html: str) -> str:
     """
     Claude HTML 강력 정화:
-    - <style> 태그 통째로 제거 (Claude가 박은 CSS 무력화)
-    - 모든 인라인 style 속성 제거 (레이아웃·색깔 깨는 거 원천 차단)
-    - 단, <small> <span> 등에 font-weight/font-size 만 허용
-    - BeautifulSoup으로 깨진 태그 자동 닫기
+    - 0단계: 텍스트로 박힌 markdown(```html, # 헤더) + nested DOCTYPE/html/head/body 제거
+    - <style>/<script> 통째 제거
+    - 인라인 style 제거 (small/span 등은 font-* 만 살림)
+    - <pre> -> <div> (좁은 칸에서 한 글자씩 떨어지는 사고 차단)
+    - 헤더 없는 layout <table> unwrap
+    - 모르는 class 제거 (CSS 안 닿는 곳 차단)
+    - width/cellpadding 등 layout 깨는 inline 속성 제거
     """
+    # 0. 텍스트 단계 정화 (BeautifulSoup 들어가기 전)
+    # 0-1. ```html ... ``` 코드블록 fence 제거
+    html = _re.sub(r"```html\s*\n?", "", html, flags=_re.IGNORECASE)
+    html = _re.sub(r"```\s*\n?", "", html)
+    # 0-2. <!DOCTYPE ...> 제거 (nested 박히는 사고)
+    html = _re.sub(r"<!DOCTYPE[^>]*>", "", html, flags=_re.IGNORECASE)
+    # 0-3. nested <html>, <head>, <body> 태그 제거 (안쪽 컨텐츠는 살림)
+    html = _re.sub(r"</?html[^>]*>", "", html, flags=_re.IGNORECASE)
+    html = _re.sub(r"</?head[^>]*>", "", html, flags=_re.IGNORECASE)
+    html = _re.sub(r"</?body[^>]*>", "", html, flags=_re.IGNORECASE)
+    # 0-4. nested <head> 안에 있던 <meta>, <title>, <link> 제거
+    html = _re.sub(r"<meta[^>]*/?>", "", html, flags=_re.IGNORECASE)
+    html = _re.sub(r"<title>[^<]*</title>", "", html, flags=_re.IGNORECASE)
+    html = _re.sub(r"<link[^>]*/?>", "", html, flags=_re.IGNORECASE)
+    # 0-5. 줄 시작 markdown 헤더(#, ##, ###) 제거
+    html = _re.sub(r"(?m)^#{1,6}\s+.*$", "", html)
+
     try:
         from bs4 import BeautifulSoup
     except ImportError:
@@ -40,21 +68,16 @@ def _sanitize_html(html: str) -> str:
 
     soup = BeautifulSoup(html, "html.parser")
 
-    # 1. <style> 태그 전부 제거 (Claude가 박은 CSS는 우리 디자인 깨므로)
-    for tag in soup.find_all("style"):
+    # 1. <style>/<script> 제거
+    for tag in soup.find_all(["style", "script"]):
         tag.decompose()
 
-    # 2. <script> 태그도 제거 (페이지에서는 우리 JS만 허용)
-    for tag in soup.find_all("script"):
-        tag.decompose()
-
-    # 3. 모든 태그의 style 속성 제거 (단 small/span에 font-* 만 살림)
+    # 2. 인라인 style 제거 (small/span 등은 font-* 만 살림)
     SAFE_FONT_PROPS = ("font-weight", "font-size", "font-style", "text-decoration")
-    for tag in soup.find_all(True):  # 모든 태그
+    for tag in soup.find_all(True):
         if not tag.has_attr("style"):
             continue
         if tag.name in ("small", "span", "em", "strong", "b", "i"):
-            # 안전한 폰트 속성만 살림
             style = tag["style"]
             kept = []
             for part in style.split(";"):
@@ -69,18 +92,65 @@ def _sanitize_html(html: str) -> str:
             else:
                 del tag["style"]
         else:
-            # 그 외 태그는 style 속성 통째 제거
             del tag["style"]
 
-    # 4. <table> 안에 위치한 stock-card는 layout 깨지므로 풀어내기
-    # (Claude가 가끔 표 안에 카드 박음)
+    # 3. layout 깨는 inline 속성 제거
+    LAYOUT_KILL_ATTRS = (
+        "width", "height", "cellpadding", "cellspacing", "border",
+        "align", "valign", "bgcolor", "size", "color",
+    )
+    for tag in soup.find_all(True):
+        for attr in LAYOUT_KILL_ATTRS:
+            if tag.has_attr(attr):
+                del tag[attr]
+
+    # 4. 모르는 class 제거 (whitelist)
+    KNOWN_CLASSES = {
+        "stock-card", "stock-header", "stock-name", "stock-allocation",
+        "stock-prices", "stock-reason", "live-price-row",
+        "candidate", "watch", "discovery", "warning",
+        "priority-1", "priority-2", "priority-3",
+        "position-update", "holdings",
+        "label", "value", "rec-price", "current-price", "price-diff",
+        "up", "down", "loading",
+        "price-row", "danger",
+        "tldr", "so-what", "card-badge",
+        "badge-intraday", "badge-warn",
+        "grid-2",
+    }
+    for tag in soup.find_all(True):
+        if not tag.has_attr("class"):
+            continue
+        kept = [c for c in tag["class"] if c in KNOWN_CLASSES]
+        if kept:
+            tag["class"] = kept
+        else:
+            del tag["class"]
+
+    # 5. <pre> -> <div>
+    for pre in soup.find_all("pre"):
+        pre.name = "div"
+
+    # 6. layout용 <table> unwrap
     for table in soup.find_all("table"):
-        # 표 안에 stock-card 있으면 표 밖으로 빼기
+        has_th = bool(table.find("th"))
         cards = table.find_all(class_="stock-card")
         if cards:
             for card in cards:
                 table.insert_before(card)
-            table.decompose()  # 빈 표 제거
+            table.decompose()
+            continue
+        if has_th:
+            continue
+        replacements = []
+        for cell in table.find_all(["td", "th"]):
+            new_div = soup.new_tag("div")
+            for child in list(cell.children):
+                new_div.append(child.extract())
+            replacements.append(new_div)
+        for div in replacements:
+            table.insert_before(div)
+        table.decompose()
 
     return str(soup)
 
@@ -156,6 +226,36 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+  }}
+  /* 본문 모든 후손 — float/position/width 차단, writing-mode/columns 무력화 */
+  .content > *,
+  .content section,
+  .content article,
+  .content > div,
+  .content .stock-card > *,
+  .content .stock-reason > *,
+  .content .stock-prices > * {{
+    float: none !important;
+    clear: both !important;
+    position: static !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }}
+  .content,
+  .content * {{
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    column-count: auto !important;
+    columns: auto !important;
+    column-width: auto !important;
+    column-rule: none !important;
+  }}
+  .content > div,
+  .content > section,
+  .content .stock-card {{
+    min-width: 0 !important;
   }}
   /* 모든 텍스트 진한 검정 강제 (Claude 인라인 흰 글씨 무력화) */
   .content *:not(.stock-allocation):not(.stock-allocation *):not(.up):not(.down):not(.value.up):not(.value.down):not(.price-diff.up):not(.price-diff.down) {{
@@ -292,14 +392,23 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   }}
 
   .stock-header {{
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
     border-bottom: 1px dashed #e0e6ed;
     padding-bottom: 8px;
     margin-bottom: 10px;
+  }}
+  /* 종목명이 너무 길어 배지가 1자 폭으로 짓눌리지 않게 */
+  .stock-header .stock-name {{
+    flex: 1 1 60% !important;
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
   }}
   .stock-header h3, .stock-header .stock-name {{
     margin: 0;
@@ -322,6 +431,13 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     border-radius: 12px !important;
     white-space: nowrap !important;
     display: inline-block !important;
+    /* 좁은 칸에 갇혀 한 글자씩 세로로 떨어지는 사고 차단 */
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+    flex-shrink: 0 !important;
+    min-width: max-content !important;
+    width: auto !important;
+    writing-mode: horizontal-tb !important;
   }}
   /* 카드 종류별 배지 색 — 모두 어두운 톤으로 흰 글씨 잘 보임 */
   .stock-card.candidate .stock-header .stock-allocation {{ background: #c0392b !important; }}
@@ -752,8 +868,8 @@ def publish(html_body: str, dry_run: bool = False) -> Path:
     # Claude HTML에서 어두운 배경 인라인 스타일 제거
     html_body = _sanitize_html(html_body)
 
-    now = datetime.now()
-    timestamp = now.strftime("%Y-%m-%d-%H%M")  # 예: 2026-04-26-1430
+    now = datetime.now(KST)  # 무조건 KST — UTC 러너에서도 한국 시간 기준
+    timestamp = now.strftime("%Y-%m-%d-%H%M")  # 예: 2026-04-26-1430 (KST)
     date_kor = now.strftime("%Y년 %m월 %d일 (%a) %H:%M KST")
 
     page = PAGE_TEMPLATE.format(

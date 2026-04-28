@@ -571,10 +571,16 @@ def _format_screener(screener: Dict) -> str:
 
 
 def build_user_prompt(data: Dict) -> str:
-    from position_tracker import format_positions_for_prompt
+    from position_tracker import format_positions_for_prompt, format_user_holdings_for_prompt
     parts = [f"# 데이터 수집 시각 (KST): {data['collected_at']}\n"]
 
-    # 🚨 0. 가장 중요 — 아침 추천 포지션 현재 상태 (단타 모드 핵심)
+    # 🎯 0-1. 가장 중요 — 사용자가 실제 매수한 종목 (user_holdings.json)
+    user_holdings = data.get("user_holdings", [])
+    holdings_text = format_user_holdings_for_prompt(user_holdings)
+    if holdings_text:
+        parts.append(holdings_text)
+
+    # 🚨 0-2. 아침 추천 포지션 현재 상태 (시스템 추천이지 사용자 실제 매수는 아님)
     eval_positions = data.get("evaluated_positions", [])
     parts.append(format_positions_for_prompt(eval_positions))
 
@@ -918,14 +924,29 @@ SYSTEM_PROMPT_PART1 = """너는 한국 개인 투자자(300만원 운용)를 위
 
 🚨 인라인 스타일(style="...")은 small 태그 빼고는 절대 X. 색상 클래스만 사용.
 
-# 이번 part1 출력 — 페이지 위쪽 4개 섹션만
+# 이번 part1 출력 — 페이지 위쪽 섹션들
 
 <h2>📝 한 줄 정리 (TL;DR)</h2>
 <div class="tldr">
-지금 시각 + 시장 분위기 + 본인 포지션 핵심 + 단타 후보. 4줄.
+지금 시각 + 시장 분위기 + **본인 실제 보유 종목 손익 한 줄** + 단타 후보. 4줄.
+예: "지금 KST 9시. 시장 보합세. 본인 보유 3종목 평가손익 -3.2% (포스코DX 손절 임박, 다른 2개 보유). 단타로 SMCI 거래량 폭증 주목."
 </div>
 
-<h2>💸 지금 당장 팔아야 할 것 (SELL)</h2>
+<h2>🎯 본인 실제 보유 종목 — 평가 + 권고</h2>
+**가장 중요. user_holdings.json의 실제 보유 종목들.**
+빈 데이터(섹션) 자체 생략. 있으면 각 종목마다 stock-card position-update:
+- 헤더: "📌 보유 중 / ✅ 익절 도달 / 🚨 손절선 도달 / ⚠️ 손절 임박" (status에서)
+- 매입가 / 현재가 / 변동률 / 평가손익(원)
+- 명확한 권고:
+  - 손절 도달 → "**즉시 매도 검토** — 손해 확정짓고 다른 기회로** (warning 카드, 빨간 강조)
+  - 손절 임박 (-7~10%) → "**손절가 근접 — 추가 -X% 빠지면 무조건 매도**"
+  - 1차 익절 → "**일부(50%) 매도 검토 — 나머지는 2차 목표 노림**"
+  - 2차 익절 → "**대부분(80%+) 매도 — 잔여만 추가 상승 노림수**"
+  - 보유 → "**계속 보유. 다음 갱신까지 관찰**"
+- 이유 3~5문장: 왜 이 권고인지 (현재 시장, 종목 뉴스, 기술적 흐름, 펀더멘털)
+- 마지막에 전체 포트폴리오 요약 (총 투자/현재가치/평가손익 %)
+
+<h2>💸 시스템 추천 중 지금 팔아야 할 것 (SELL)</h2>
 evaluated_positions 중 손절 도달/임박/큰 하락만. 없으면 섹션 통째 생략.
 각 카드 stock-card warning, data-section="sell-now". 디테일 (왜 팔아야 하는지 3~4문장).
 
@@ -1057,7 +1078,22 @@ def generate_briefing(data: Dict, mode: str = "full") -> str:
     html1 = _call_claude(client, SYSTEM_PROMPT_PART1, user_prompt, 8000, "Part1 (위쪽 5섹션)")
     html2 = _call_claude(client, SYSTEM_PROMPT_PART2, user_prompt, 8000, "Part2 (아래쪽 11섹션)")
 
-    full_html = html1 + "\n\n" + html2
+    # 각 파트 내부 정화 + 닫히지 않은 태그 자동 닫기 (BeautifulSoup)
+    try:
+        from bs4 import BeautifulSoup
+        soup1 = BeautifulSoup(html1, "html.parser")
+        html1 = str(soup1)
+        soup2 = BeautifulSoup(html2, "html.parser")
+        html2 = str(soup2)
+    except Exception as e:
+        logger.warning(f"파트 HTML 정규화 실패: {e}")
+
+    # 명확히 분리된 컨테이너 — Part 사이에 clearfix 들어가게
+    full_html = (
+        f'<section class="briefing-part part-1">{html1}</section>'
+        f'<div style="clear:both"></div>'
+        f'<section class="briefing-part part-2">{html2}</section>'
+    )
     logger.info(f"📝 통합 리포트 — 총 {len(full_html):,}자")
     return full_html
 

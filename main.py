@@ -14,13 +14,56 @@
 import os
 import sys
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from utils import setup_logging, validate_env, logger
+
+
+# === KST 타임존 (Asia/Seoul = UTC+9) ===
+# zoneinfo가 환경에 따라 없을 수도 있어 fallback으로 fixed offset 사용
+try:
+    from zoneinfo import ZoneInfo
+    KST = ZoneInfo("Asia/Seoul")
+except ImportError:
+    KST = timezone(timedelta(hours=9))
+
+
+# === 30분 중복 방지 락 ===
+# GitHub Actions 무료 cron 은 같은 슬롯에 백업 cron 여러 개 필요 →
+# 같은 30분 안에 두 번 돌면 두 번째는 그냥 종료 (API 비용 낭비 차단)
+LOCK_FILE = Path(__file__).parent / "archive" / "last_run.txt"
+
+
+def _check_lock(now: datetime) -> bool:
+    """True 면 너무 최근에 돈 거 — 즉시 종료해야 함."""
+    if not LOCK_FILE.exists():
+        return False
+    try:
+        last_iso = LOCK_FILE.read_text(encoding="utf-8").strip()
+        last = datetime.fromisoformat(last_iso)
+        # 둘 다 aware/naive 통일
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=KST)
+        if now.tzinfo is None:
+            now = now.replace(tzinfo=KST)
+        delta_min = (now - last).total_seconds() / 60
+        return 0 <= delta_min < 30
+    except Exception as e:
+        logger.warning(f"락 파일 파싱 실패 — 무시: {e}")
+        return False
+
+
+def _write_lock(now: datetime) -> None:
+    try:
+        LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
+        LOCK_FILE.write_text(now.isoformat(), encoding="utf-8")
+    except Exception as e:
+        logger.warning(f"락 파일 쓰기 실패 — 무시: {e}")
 
 
 def safe_run(fn_name: str, fn, *args, **kwargs):
@@ -35,10 +78,18 @@ def safe_run(fn_name: str, fn, *args, **kwargs):
 
 def main() -> int:
     setup_logging("INFO")
-    start = datetime.now()
+    # 모든 시간은 KST 기준
+    start = datetime.now(KST)
     logger.info("=" * 60)
-    logger.info(f"📊 시장 브리핑 시작 — {start.strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"📊 시장 브리핑 시작 — {start.strftime('%Y-%m-%d %H:%M:%S KST')}")
     logger.info("=" * 60)
+
+    # 30분 중복 방지 락 — 백업 cron 들 줄줄이 동시 트리거 막기
+    # 사용자가 수동 강제 실행하고 싶으면 환경변수 FORCE_RUN=1
+    if os.environ.get("FORCE_RUN") != "1" and _check_lock(start):
+        logger.info("⏭️  30분 안에 이미 실행됨 — 중복 차단 (FORCE_RUN=1 로 강제 실행 가능)")
+        return 0
+    _write_lock(start)
 
     # 1. 환경변수 + 모드 검증
     # PUBLISH_MODE: "web"(기본 — docs/ 폴더에 HTML 저장) / "email" / "both"
@@ -123,6 +174,14 @@ def main() -> int:
     evaluated = safe_run("포지션 평가", evaluate_positions) or []
     data["evaluated_positions"] = evaluated
     logger.info(f"  📌 추적 중인 아침 추천 포지션 {len(evaluated)}개")
+
+    # 🎯 사용자 실제 보유 종목 평가 — user_holdings.json 기반
+    from position_tracker import evaluate_user_holdings
+    user_holdings = safe_run("사용자 보유 종목 평가", evaluate_user_holdings) or []
+    data["user_holdings"] = user_holdings
+    if user_holdings:
+        total_pnl = sum(h.get("pnl") or 0 for h in user_holdings)
+        logger.info(f"  🎯 사용자 보유 {len(user_holdings)}종목 / 총 평가손익 {total_pnl:+,}원")
 
     # 시스템 자기 검증 — 과거 30일 추천 정확도 (Claude가 self-correct하도록)
     from accuracy_tracker import evaluate_past_recommendations
@@ -218,7 +277,7 @@ def main() -> int:
         except Exception as e:
             logger.warning(f"포지션 저장 실패: {e}")
 
-    elapsed = (datetime.now() - start).total_seconds()
+    elapsed = (datetime.now(KST) - start).total_seconds()
     logger.info(f"\n✅ 전체 완료 ({elapsed:.1f}초 소요)")
     return 0
 

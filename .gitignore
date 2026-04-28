@@ -4,6 +4,13 @@
 *.env
 !.env.example
 
+# 사용자 사적 정보 — public repo면 절대 push 금지
+user_holdings.json
+.cowork_context.md
+
+# 로컬 30분 락 파일 — git에 들어가면 GitHub Actions 와 race condition
+archive/last_run.txt
+
 # Python
 __pycache__/
 *.py[cod]
