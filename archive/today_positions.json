@@ -1,13 +1,13 @@
 {
-  "saved_at": "2026-04-28T23:47:35.635555",
-  "date": "2026-04-28",
+  "saved_at": "2026-04-29T07:41:43.373526",
+  "date": "2026-04-29",
   "positions": [
     {
       "ticker": "000660.KS",
-      "name": "🚫 추격매수 함정 — SK하이닉스000660.KS · KOSPI",
+      "name": "SK하이닉스000660.KS · KOSPI",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "BUY 차단",
+      "allocation": "🚫 매수 차단",
       "recommended_at": null,
       "target_1": null,
       "target_2": null,
@@ -15,10 +15,10 @@
     },
     {
       "ticker": "NVDA",
-      "name": "🚫 추격매수 함정 — NVIDIANVDA · 나스닥",
+      "name": "NVIDIANVDA · NASDAQ",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "BUY 차단",
+      "allocation": "🚫 매수 차단",
       "recommended_at": null,
       "target_1": null,
       "target_2": null,
@@ -26,36 +26,47 @@
     },
     {
       "ticker": "005930.KS",
-      "name": "🚫 어닝 도박 — 삼성전자005930.KS · KOSPI",
+      "name": "삼성전자005930.KS · KOSPI",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "BUY 차단",
+      "allocation": "🚫 매수 차단 (오늘 한정)",
       "recommended_at": null,
       "target_1": null,
       "target_2": null,
       "stop_loss": null
     },
     {
-      "ticker": "005490.KS",
-      "name": "🥇 1순위 — POSCO홀딩스005490.KS · KOSPI",
+      "ticker": "112040.KQ",
+      "name": "🥇 위메이드맥스(가칭·확인필요)112040.KQ · KOSDAQ",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "20% · 600,000원",
-      "recommended_at": 465000.0,
-      "target_1": 488000.0,
-      "target_2": 510000.0,
-      "stop_loss": 430000.0
+      "allocation": "1순위 · 최대 25% · 750,000원",
+      "recommended_at": 24750.0,
+      "target_1": 27000.0,
+      "target_2": 29500.0,
+      "stop_loss": 22500.0
     },
     {
-      "ticker": "005380.KS",
-      "name": "🥈 2순위 — 현대차005380.KS · KOSPI",
+      "ticker": "489500.KQ",
+      "name": "🥈 엘케이켐489500.KQ · KOSDAQ",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "20% · 600,000원",
-      "recommended_at": 557000.0,
-      "target_1": 585000.0,
-      "target_2": 620000.0,
-      "stop_loss": 515000.0
+      "allocation": "2순위 · 최대 20% · 600,000원 · ⚠️ 추가 조사 필요",
+      "recommended_at": 0.0,
+      "target_1": 0.0,
+      "target_2": 0.0,
+      "stop_loss": 0.0
+    },
+    {
+      "ticker": "TSLA",
+      "name": "🥉 TeslaTSLA · NASDAQ",
+      "section": "top-priority",
+      "card_type": "candidate",
+      "allocation": "3순위 · 최대 20% · 600,000원",
+      "recommended_at": 376.02,
+      "target_1": 410.0,
+      "target_2": 450.0,
+      "stop_loss": 345.0
     }
   ]
 }
