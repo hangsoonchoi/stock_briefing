@@ -1,72 +1,28 @@
 {
-  "saved_at": "2026-04-30T12:12:02.487558",
+  "saved_at": "2026-04-30T12:28:29.554707",
   "date": "2026-04-30",
   "positions": [
     {
-      "ticker": "000660.KS",
-      "name": "🚫 SK하이닉스000660.KS · KOSPI",
-      "section": "avoid",
-      "card_type": "warning",
-      "allocation": "추격매수 금지",
+      "ticker": "006800.KS",
+      "name": "🥇 미래에셋증권006800.KS · KOSPI",
+      "section": "top-priority",
+      "card_type": "candidate",
+      "allocation": "25% · 750,000원 — 추가 조사 필요",
       "recommended_at": null,
       "target_1": null,
       "target_2": null,
       "stop_loss": null
     },
     {
-      "ticker": "NVDA",
-      "name": "🚫 NVIDIANVDA · NASDAQ",
-      "section": "avoid",
-      "card_type": "warning",
-      "allocation": "추격매수 금지",
+      "ticker": "265520.KS",
+      "name": "🥈 AP시스템265520.KS · KOSPI — 추가 조사 필요",
+      "section": "top-priority",
+      "card_type": "candidate",
+      "allocation": "20% · 600,000원 — 소형주 발굴 후보",
       "recommended_at": null,
       "target_1": null,
       "target_2": null,
       "stop_loss": null
-    },
-    {
-      "ticker": "005930.KS",
-      "name": "🚫 삼성전자005930.KS · KOSPI",
-      "section": "avoid",
-      "card_type": "warning",
-      "allocation": "고점 근처 추격금지",
-      "recommended_at": null,
-      "target_1": null,
-      "target_2": null,
-      "stop_loss": null
-    },
-    {
-      "ticker": "170790.KQ",
-      "name": "🥇 1순위 — 파이오링크170790 · KOSDAQ | 발굴 후보",
-      "section": "top-priority",
-      "card_type": "candidate",
-      "allocation": "추가 조사 필요 · 소형주",
-      "recommended_at": 0.0,
-      "target_1": 0.0,
-      "target_2": 0.0,
-      "stop_loss": 0.0
-    },
-    {
-      "ticker": "265520.KQ",
-      "name": "🥈 2순위 — AP시스템265520 · KOSDAQ | 발굴 후보",
-      "section": "top-priority",
-      "card_type": "candidate",
-      "allocation": "추가 조사 필요 · 중소형주",
-      "recommended_at": 0.0,
-      "target_1": 0.0,
-      "target_2": 0.0,
-      "stop_loss": 0.0
-    },
-    {
-      "ticker": "TSLA",
-      "name": "🥉 3순위 — Tesla (기보유 — 추가 매수 아님)TSLA · NASDAQ",
-      "section": "top-priority",
-      "card_type": "candidate",
-      "allocation": "기존 보유 유지 · 추가 매수 아님",
-      "recommended_at": 372.8,
-      "target_1": 410.0,
-      "target_2": 440.0,
-      "stop_loss": 346.0
     }
   ]
 }
