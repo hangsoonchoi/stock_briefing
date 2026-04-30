@@ -1,7 +1,18 @@
 {
-  "saved_at": "2026-04-30T10:37:23.102210",
+  "saved_at": "2026-04-30T11:20:01.228650",
   "date": "2026-04-30",
   "positions": [
+    {
+      "ticker": "TSLA",
+      "name": "📌 보유 중 — TeslaTSLA · NASDAQ",
+      "section": "position-update",
+      "card_type": "candidate",
+      "allocation": "보유 포지션",
+      "recommended_at": 372.8,
+      "target_1": 410.0,
+      "target_2": 440.0,
+      "stop_loss": 346.0
+    },
     {
       "ticker": "000660.KS",
       "name": "🚫 SK하이닉스000660.KS · KOSPI",
@@ -29,7 +40,7 @@
       "name": "🚫 삼성전자005930.KS · KOSPI",
       "section": "avoid",
       "card_type": "warning",
-      "allocation": "고점 근처 신규 매수 금지",
+      "allocation": "추격매수 금지",
       "recommended_at": null,
       "target_1": null,
       "target_2": null,
@@ -40,7 +51,7 @@
       "name": "🥇 1순위 — TeslaTSLA · NASDAQ",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "30% · 900,000원 상당",
+      "allocation": "최대 25% · 750,000원",
       "recommended_at": 372.8,
       "target_1": 410.0,
       "target_2": 440.0,
@@ -48,25 +59,25 @@
     },
     {
       "ticker": "265520.KS",
-      "name": "🥈 2순위 — AP시스템265520.KS · KOSDAQ · 발굴 후보",
+      "name": "🥈 2순위 — AP시스템265520.KS · KOSDAQ",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "20% · 600,000원 상당",
-      "recommended_at": 0.0,
-      "target_1": 0.0,
-      "target_2": 0.0,
-      "stop_loss": 0.0
+      "allocation": "최대 10% · 300,000원 | ⚠️ 추가 조사 필요",
+      "recommended_at": null,
+      "target_1": null,
+      "target_2": null,
+      "stop_loss": null
     },
     {
-      "ticker": "006800.KS",
-      "name": "🥉 3순위 — 미래에셋증권006800.KS · KOSPI · 추가 조사 필요",
+      "ticker": "170790.KQ",
+      "name": "🥉 3순위 — 파이오링크170790.KQ · KOSDAQ",
       "section": "top-priority",
       "card_type": "candidate",
-      "allocation": "15% · 450,000원 상당",
-      "recommended_at": 0.0,
-      "target_1": 0.0,
-      "target_2": 0.0,
-      "stop_loss": 0.0
+      "allocation": "최대 8% · 240,000원 | ⚠️ 추가 조사 필요",
+      "recommended_at": null,
+      "target_1": null,
+      "target_2": null,
+      "stop_loss": null
     }
   ]
 }
